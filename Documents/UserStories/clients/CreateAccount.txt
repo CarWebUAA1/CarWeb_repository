@@ -1,0 +1,29 @@
+As a <client> i need to be able to <create / log in to an account> So that i can <be able to access all of the websites services>
+
+- the client will be required to register his data, and go trough a verification process, not only as a safety measure, but to register all of their data smoothly for further operations.
+
+
+
+Acceptance criteria
+
+- the system must verify all of the data camps according to the expected data (password must contain x,y,z , email must end in a @gmail.com type of variation, cannot be above 100 years old or below 18)
+
+- the system must make sure to register all this data after all the verification boxes are check marked 
+
+- the system will make sure none of the data camps are left empty.
+
+- all of the information shall be stored in the data base, creating the users profile for him to log back in.
+
+
+
+completion criteria 
+
+- user registration form contains all required fields with real-time validation 
+
+- verification process successfully triggers and completes
+
+- user data is successfully written to the database upon passing all validation checks
+
+- user can successfully log in using their created credentials
+
+- user is redirected to the main dashboard/service landing page upon logging in

@@ -1,0 +1,29 @@
+As a <client> i need to be able to <buy or sell cars> So that i can <be able to access or determine the price>
+
+
+Acceptance criteria
+
+- the system will display all of the information directly from the database, showing the correct prices. 
+
+- the system will update the price and stock after any successful registered operation
+
+- the system will prompt the user with the limitations of the price system (no going below X)
+
+- the user will be able to manage his own prices, change and modify it
+
+- the users modifications will be subjected to the systems rules. (interval where price cannot be changed, cooldown and policy's)
+
+
+
+completion criteria
+
+- user has completed a buy or sell transaction successfully
+
+- database updates the car stock and price instantly after the operation
+
+- system enforces minimum price limit and blocks invalid price inputs
+
+- user can edit their listing price within allowed system rules and cooldown limits
+
+- system logs price modifications and applies defined policies and restrictions
+
