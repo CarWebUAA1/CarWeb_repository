@@ -1,6 +1,0 @@
-- Layered architecture (MVC).
-- Web application.
-- REST controllers: /api/...
-- Services: SalesManagement, AppointmentManagement, InventoryManagement.
-- Repositories (database access).
-- PDF contract and receipt generation (used exclusively within the Java application).
