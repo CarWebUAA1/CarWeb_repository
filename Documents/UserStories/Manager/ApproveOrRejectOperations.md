@@ -16,7 +16,6 @@ Every operation moves money and a vehicle's ownership, so a single error can be 
 * The system logs: date (local time), manager ID, TradeId, decision and reason.
 
 ## Definition of done
-[Checklist que indica los quality gates por los que debe pasar la feature]
 
 * [ ] The client has reviewed and approved the user story after the understanding stage.
 * [ ] The client has seen and accepted the screen mockups.
