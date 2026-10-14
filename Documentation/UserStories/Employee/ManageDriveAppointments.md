@@ -19,3 +19,5 @@ This enhances the customer experience and allows for maintaining control over co
 * [ ] A log for observations and incidents has been implemented.
 * [ ] Vehicle availability and schedule validation have been verified.
 * [ ] At least one automated test for the functionality has been created and executed.
+
+## Dificulty of implementacion 2/5

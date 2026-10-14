@@ -1,3 +1,4 @@
+# Planed tecnologies 
 - Backend: Java 17, TypeScript, Express.
 - Database: MySQL.
 - Frontend: HTML, CSS, JS, and Angular.

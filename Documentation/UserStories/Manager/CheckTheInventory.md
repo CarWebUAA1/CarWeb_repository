@@ -1,7 +1,6 @@
 #  Check the inventory
 
-As a Manager, I want to see all cars and parts with their status and totals
-So that I can decide what to buy and how to price it
+As a Manager, I want to see all cars and parts with their status and totals So that I can decide what to buy and how to price it.
 
 The Manager needs a quick overview of the stock to make purchasing and pricing decisions. Totals by status show at a glance how much is available and how much capital is tied up.
 
@@ -24,3 +23,5 @@ The Manager needs a quick overview of the stock to make purchasing and pricing d
 * [ ] The functional analyst (product owner) has approved the feature.
 * [ ] At least one automated test has been created for this feature and it passes.
 * [ ] The continuous integration server reports no errors.
+
+## Dificulty of implementacion 2/5

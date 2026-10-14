@@ -1,3 +1,4 @@
+# Security To be implemented 
 - Session starts via authentication and expires due to inactivity.
 - Input validation.
 - Hashed password storage.

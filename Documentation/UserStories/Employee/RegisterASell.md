@@ -1,11 +1,12 @@
-# Register The Trades Done
+# Register A Sell
 
-As an employee, I want to record purchase and sale transactions so that the system maintains a reliable transaction history and updates the inventory.
-This enables traceability and financial control of the business.
+As an employee, I want to record the sale transactions so that the system maintains a reliable transaction history and updates the inventory.
+
+This enables traceability and financial control of the business.This is where an online request becomes a real transaction. Registering it with its payment and contract gives the Manager everything needed to approve it.
 
 ## Acceptance criteria
 
-* The system must allow the recording of vehicle purchase and sale transactions.
+* The system must allow the recording of vehicle sale transactions.
 * Each transaction must include a unique identifier, transaction type, vehicle, customer or supplier, price, date, and the responsible employee.
 * The system must validate that all mandatory fields are filled in and that the price is valid.
 * The system must verify that the necessary documentation has been validated before completing the transaction.
@@ -28,3 +29,5 @@ This enables traceability and financial control of the business.
 * [ ] It has been verified that inactive transactions do not appear in standard queries.
 * [ ] Transaction logging and traceability have been tested.
 * [ ] Data integrity in the event of transaction errors has been verified.
+
+## Dificulty of implementacion 4/5

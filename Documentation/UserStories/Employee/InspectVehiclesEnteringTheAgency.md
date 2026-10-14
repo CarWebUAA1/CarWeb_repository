@@ -20,3 +20,5 @@ This ensures that only cars in safe and road-legal condition are traded.
 * [ ] Vehicle condition assessment and its result have been implemented.
 * [ ] Validation of mandatory fields and duplicate serial numbers has been tested.
 * [ ] Inspection history lookup has been verified.
+
+## Dificulty of implementacion 3/5

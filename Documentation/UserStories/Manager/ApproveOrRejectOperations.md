@@ -25,3 +25,5 @@ Every operation moves money and a vehicle's ownership, so a single error can be 
 * [ ] The functional analyst (product owner) has approved the feature.
 * [ ] At least one automated test has been created for this feature and it passes.
 * [ ] The continuous integration server reports no errors.
+
+## Dificulty of implementacion 3/5

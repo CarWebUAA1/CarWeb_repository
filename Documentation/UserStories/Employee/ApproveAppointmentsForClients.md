@@ -19,3 +19,5 @@ This ensures an organized service workflow and prevents scheduling conflicts.
 * [ ] The appointment confirmation and rejection functionality has been implemented.
 * [ ] Employee assignment and schedule validation have been tested.
 * [ ] The sending of notifications to the client has been verified.
+
+## Dificulty of implementacion 3/5

@@ -20,3 +20,5 @@ This prevents fraud and ensures regulatory compliance.
 * [ ] Se ha probado el bloqueo de transacciones con documentación incompleta.
 * [ ] Se han probado los permisos de acceso a la documentación.
 * [ ] Se ha verificado el registro de auditoría de las validaciones.
+
+## Dificulty of implementacion 3/5

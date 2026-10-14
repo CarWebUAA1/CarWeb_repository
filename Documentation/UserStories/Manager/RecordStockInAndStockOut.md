@@ -1,6 +1,8 @@
 #  Record stock in and stock out
 
-As a Manager, I want to record every car or part that enters or leaves the dealership So that I can trace where each item is Knowing what is physically in the lot prevents losses and mistakes, such as selling a car that has already left. Each movement leaves a trace of who moved what, when and why.
+As a Manager, I want to record every car or part that enters or leaves the dealership So that I can trace where each item is Knowing what is physically in the lot prevents losses and mistakes, such as selling a car that has already left. 
+
+Each movement leaves a trace of who moved what, when and why.
 
 ## Acceptance criteria
 
@@ -21,3 +23,5 @@ As a Manager, I want to record every car or part that enters or leaves the deale
 * [ ] The functional analyst (product owner) has approved the feature.
 * [ ] At least one automated test has been created for this feature and it passes.
 * [ ] The continuous integration server reports no errors.
+
+## Dificulty of implementacion 2/5

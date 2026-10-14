@@ -1,7 +1,9 @@
 #  Register and update inventory
 
 As a Manager, I want to add, edit, delete and change the status of cars and spare parts, So that the catalog always shows what we really have
-The catalog customers see is only as good as the inventory behind it. If a sold car still shows as available, the dealership loses credibility and wastes customers' time.
+The catalog customers see is only as good as the inventory behind it. 
+
+If a sold car still shows as available, the dealership loses credibility and wastes customers' time.
 
 ## Acceptance criteria
 
@@ -24,3 +26,5 @@ The catalog customers see is only as good as the inventory behind it. If a sold 
 * [ ] The functional analyst (product owner) has approved the feature.
 * [ ] At least one automated test has been created for this feature and it passes.
 * [ ] The continuous integration server reports no errors.
+
+## Dificulty of implementacion 2/5

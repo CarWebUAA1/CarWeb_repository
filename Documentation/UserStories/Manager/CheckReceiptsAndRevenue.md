@@ -1,7 +1,9 @@
 #  Check receipts and revenue
 
 As a Manager, I want to see the receipts and revenue for a chosen period
-So that I can track how the dealership is performing Revenue is the main indicator of how the business is doing. Seeing receipts by period helps the Manager spot good and bad months and compare income from sales with money spent on purchases.
+So that I can track how the dealership is performing Revenue is the main indicator of how the business is doing. 
+
+Seeing receipts by period helps the Manager spot good and bad months and compare income from sales with money spent on purchases.
 
 ## Acceptance criteria
 
@@ -22,3 +24,5 @@ So that I can track how the dealership is performing Revenue is the main indicat
 * [ ] The functional analyst (product owner) has approved the feature.
 * [ ] At least one automated test has been created for this feature and it passes.
 * [ ] The continuous integration server reports no errors.
+
+## Dificulty of implementacion 3/5
