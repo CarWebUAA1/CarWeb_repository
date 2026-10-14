@@ -1,4 +1,4 @@
-#  Schedule an appointment
+#  See The Price Breakdown 
 
 As a registered User, I want to see how the final price was calculated
 So that I trust that the price is fair

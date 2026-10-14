@@ -1,4 +1,4 @@
-# Cancel an appointment
+# Buy Spare Parts 
 
 As a registered User, I want to buy spare parts compatible with my car
 So that I can repair it at a lower cost
