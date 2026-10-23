@@ -1,1 +1,0 @@
-Victor_remueve_este_documento_despues_de_Poner_el_diagrama 
