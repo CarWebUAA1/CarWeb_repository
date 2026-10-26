@@ -1,0 +1,10 @@
+.card {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+}
+
+.card__title {
+  margin: 0 0 1rem;
+}
