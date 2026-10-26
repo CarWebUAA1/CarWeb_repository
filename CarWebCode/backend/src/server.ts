@@ -1,26 +1,11 @@
-import express, { Router } from "express";
 
-interface serverOptions{
-  port:number,
-  routes:Router
-}
+import dotenv from "dotenv";
+import app from "./app.js";
 
-export class Server {
-server = express();
+dotenv.config();
 
-private readonly port: number;
-private readonly routes: Router;
-constructor(options:serverOptions) {
-    this.port = options.port;
-    this.routes = options.routes;
-    
-}
+const port = Number(process.env["PORT"]) || 3000;
 
-start() {
-    this.server.use(express.json());
-    this.server.use('/api/v1', this.routes);
-    this.server.listen(this.port, () => {
-    console.log(`server running on port: ${this.port}`);
-    });
-  }
-}
+app.listen(port, () => {
+    console.log(`Servidor CarWeb ejecutándose en http://localhost:${port}`);
+});

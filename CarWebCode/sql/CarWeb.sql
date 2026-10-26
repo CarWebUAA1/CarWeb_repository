@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS StockMovement (
     MovementType     VARCHAR(100),
     Reason            TEXT,
     MovementDate      INT,
-    MovementStatus    VARCHAR(50),
+    MovementStatus    VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS Document (
