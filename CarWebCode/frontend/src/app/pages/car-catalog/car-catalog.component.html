@@ -1,0 +1,40 @@
+<main class="catalog">
+  <h1>Catálogo de autos</h1>
+
+  @if (cars.isLoading()) {
+    <p class="catalog__status">Cargando autos…</p>
+  } @else if (cars.error()) {
+    <div class="catalog__status" role="alert">
+      <p>No pudimos cargar el catálogo.</p>
+      <button type="button" (click)="cars.reload()">Reintentar</button>
+    </div>
+  } @else if (cars.hasValue()) {
+    @let result = cars.value();
+
+    @if (result.total === 0) {
+      <p class="catalog__status">No hay autos disponibles en este momento.</p>
+    } @else if (result.data.length === 0) {
+      <p class="catalog__status">
+        Esta página no existe. <a routerLink="/cars">Volver a la primera página</a>
+      </p>
+    } @else {
+      <ul class="catalog__grid">
+        @for (car of result.data; track car.id) {
+          <li><app-car-card [car]="car" /></li>
+        }
+      </ul>
+
+      @if (result.totalPages > 1) {
+        <nav class="pagination" aria-label="Paginación del catálogo">
+          @if (result.page > 1) {
+            <a routerLink="/cars" [queryParams]="{ page: result.page - 1 }">← Anterior</a>
+          }
+          <span>Página {{ result.page }} de {{ result.totalPages }}</span>
+          @if (result.page < result.totalPages) {
+            <a routerLink="/cars" [queryParams]="{ page: result.page + 1 }">Siguiente →</a>
+          }
+        </nav>
+      }
+    }
+  }
+</main>
