@@ -1,6 +1,6 @@
 const formulario = document.getElementById("registerForm");
 const mensaje = document.getElementById("mensaje");
-const boton = document.getElementById("btnRegistrar");
+const boton = document.getElementById("btnRegister");
 
 formulario.addEventListener("submit", async (event) => {
     event.preventDefault();

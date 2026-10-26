@@ -1,49 +1,27 @@
 import express, { Router } from "express";
-<<<<<<< Updated upstream
-=======
 import cors from "cors";
->>>>>>> Stashed changes
 
 interface serverOptions{
-  port:number,
-  routes:Router
+    port:number,
+    routes:Router
 }
 
 export class Server {
-<<<<<<< Updated upstream
-server = express();
+    server = express();
 
-private readonly port: number;
-private readonly routes: Router;
-constructor(options:serverOptions) {
-    this.port = options.port;
-    this.routes = options.routes;
-    
-}
+    private readonly port: number;
+    private readonly routes: Router;
+    constructor(options:serverOptions) {
+        this.port = options.port;
+        this.routes = options.routes;
+    }
 
-start() {
-    this.server.use(express.json());
-    this.server.use('/api/v1', this.routes);
-    this.server.listen(this.port, () => {
-    console.log(`server running on port: ${this.port}`);
-=======
-  server = express();
-
-  private readonly port: number;
-  private readonly routes: Router;
-  constructor(options:serverOptions) {
-    this.port = options.port;
-    this.routes = options.routes;
-    
-  }
-  
-  start() {
-    this.server.use(express.json());
-    this.server.use(cors());
-    this.server.use('/api/v1', this.routes);
-    this.server.listen(this.port, () => {
-      console.log(`server running on port: ${this.port}`);
->>>>>>> Stashed changes
-    });
-  }
+    start() {
+        this.server.use(express.json());
+        this.server.use(cors());
+        this.server.use('/api/v1', this.routes);
+        this.server.listen(this.port, () => {
+            console.log(`server running on port: ${this.port}`);
+        });
+    }
 }
