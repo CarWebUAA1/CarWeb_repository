@@ -1,13 +1,11 @@
-import { Server } from "./server.js";
-import routes from "./routes/index.js";
 import dotenv from 'dotenv';
-
 dotenv.config();
-const port = Number(process.env['PORT']);
 
-function main(){
-   const server = new Server({port, routes});
-   server.start();
-}
+import Server from './server.ts';
+import routes from './routes/index.ts';
 
-main();
+const server = new Server();
+
+server.app.use(routes);
+
+server.start();
