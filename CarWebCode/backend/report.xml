@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.4874428">
+    <testsuite name="tests/app.test.ts" timestamp="2026-10-26T09:49:54.818Z" hostname="DESKTOP-9MF27FG" tests="1" failures="0" errors="0" skipped="0" time="0.4874428">
+        <testcase classname="tests/app.test.ts" name="app.ts config testing &gt; should start sever" time="0.4820598">
+            <system-err>
+◇ injected env (6) from .env
+
+◇ injected env (0) from .env
+
+            </system-err>
+        </testcase>
+    </testsuite>
+</testsuites>

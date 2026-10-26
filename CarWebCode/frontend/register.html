@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register CarWeb</title>
+    <link rel="stylesheet" href="register.css">
+    <script src="register.js" defer></script>
+</head>
+
+<body>
+    <main class="register-container">
+        <h1>Create an Account</h1>
+        <p class="subtitle">Welcome to CarWeb</p>
+
+        <form id="registerForm">
+            <label for="Name">Full Name</label>
+            <input
+                type="text"
+                id="Name"
+                name="Name"
+                maxlength="150"
+                placeholder="Juan Perez"
+                autocomplete="name"
+                required
+            >
+
+            <label for="Phone">Phone Number</label>
+            <input
+                type="tel"
+                id="Phone"
+                name="Phone"
+                placeholder="1234567890"
+                maxlength="20"
+                autocomplete="tel"
+            >
+
+            <label for="Email">Email</label>
+            <input
+                type="email"
+                id="Email"
+                name="Email"
+                maxlength="150"
+                placeholder="example@gmail.com"
+                autocomplete="email"
+                required
+            >
+
+            <label for="Password">Password</label>
+            <input
+                type="password"
+                id="Password"
+                name="Password"
+                minlength="8"
+                autocomplete="new-password"
+                required
+            >
+
+            <label for="ConfirmPassword">
+                Confirm Password
+            </label>
+            <input
+                type="password"
+                id="ConfirmPassword"
+                name="ConfirmPassword"
+                minlength="8"
+                autocomplete="new-password"
+                required
+            >
+
+            <button type="submit" id="btnRegister">
+                Register
+            </button>
+        </form>
+
+        <p id="mensaje" role="status" aria-live="polite"></p>
+
+    </main>
+
+</body>
+</html>

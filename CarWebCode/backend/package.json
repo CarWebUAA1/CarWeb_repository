@@ -16,11 +16,20 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+<<<<<<< Updated upstream
+=======
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+>>>>>>> Stashed changes
     "dotenv": "^18.0.9",
     "express": "^5.3.0",
-    "mysql2": "^3.24.6"
+    "mysql2": "^3.24.6",
+    "sequelize": "^6.37.8",
+    "supertest": "^7.3.1",
+    "vitest": "^5.0.5"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "nodemon": "^3.1.14",
