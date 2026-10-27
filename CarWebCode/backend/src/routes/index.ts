@@ -5,8 +5,12 @@ import { CarController } from "../controllers/car.controller.js";
 import { MySqlCarRepository } from "../repositories/car.repository.js";
 import { CarService } from "../services/car.service.js";
 import { createCarRouter } from "./car.routes.js";
+import { Router } from 'express';
+import usersRoutes from './userRoutes.ts';
 
-const router = Router();
+export class AppRoutes {
+    static get router(): Router {
+        const router = Router();
 
 // Inventory management (US-20). Mounted first: its fixed paths (/getAllCars, ...)
 // must be matched before the catalog's GET /:id below.
@@ -17,3 +21,8 @@ const catalogController = new CarController(new CarService(new MySqlCarRepositor
 router.use("/cars", createCarRouter(catalogController));
 
 export default router;
+        router.use("/cars", CarsRoutes);
+        router.use('/users', usersRoutes);
+        return router;
+    }
+}

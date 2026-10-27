@@ -1,13 +1,22 @@
-import { Server } from "./server.js";
-import routes from "./routes/index.js";
 import dotenv from 'dotenv';
+import { Server } from './server.ts';
+import { AppRoutes } from "./routes/index.ts";
+import sequelizeConnection from './conf/sequelize.connection.ts';
 
 dotenv.config();
-const port = Number(process.env['PORT']);
 
-function main(){
-   const server = new Server({port, routes});
-   server.start();
+const port = Number(process.env["PORT"]);
+
+async function main() {
+  // ORM
+  try {
+    await sequelizeConnection.connect();
+    const server = new Server({ port, routes: AppRoutes.router });
+    server.start();
+  } catch (e) {
+    console.log(e);
+    process.exit(1);
+  }
 }
 
 main();
