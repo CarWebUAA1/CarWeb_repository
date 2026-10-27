@@ -1,0 +1,39 @@
+
+<div class="login-page">
+  <div class="login-card">
+    <div class="logo">CW</div>
+
+    <h1>CarWeb</h1>
+    <p class="subtitle">Sistema de gestión de vehículos</p>
+
+    <form (submit)="iniciarSesion($event)">
+      <label for="email">Correo electrónico</label>
+      <input
+        id="email"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        placeholder="empleado@carweb.com"
+        required
+      />
+
+      <label for="password">Contraseña</label>
+      <input
+        id="password"
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        placeholder="Ingresa tu contraseña"
+        required
+      />
+
+      <p class="mensaje" *ngIf="mensaje">{{ mensaje }}</p>
+
+      <button type="submit" [disabled]="cargando">
+        {{ cargando ? 'Verificando...' : 'Iniciar sesión' }}
+      </button>
+    </form>
+
+    <p class="footer-text">Acceso exclusivo para empleados</p>
+  </div>
+</div>
