@@ -25,7 +25,6 @@ function car(overrides: Partial<CarDetail> = {}): CarDetail {
       { id: 1, url: 'https://example.com/1.jpg', isMain: true },
       { id: 2, url: 'https://example.com/2.jpg', isMain: false },
     ],
-    serviceHistory: [{ date: '2021-04-15', mileage: 20000, description: 'Cambio de aceite' }],
     ...overrides,
   };
 }
@@ -61,7 +60,6 @@ describe('CarDetailComponent', () => {
     expect(el.querySelector('h1')?.textContent).toContain('Honda Civic 2019');
     expect(el.querySelector('.specs')?.textContent).toContain('CVT');
     expect(el.querySelectorAll('.gallery__thumb')).toHaveLength(2);
-    expect(el.textContent).toContain('Cambio de aceite');
     const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>('app-button button'));
     expect(buttons.map((b) => b.textContent?.trim())).toEqual(['Agendar cita', 'Comprar']);
     expect(buttons.every((b) => b.disabled)).toBe(true);

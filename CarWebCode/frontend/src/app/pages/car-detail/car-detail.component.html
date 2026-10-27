@@ -60,22 +60,6 @@
             <dt>Color</dt><dd>{{ c.color }}</dd>
             <dt>Estado de las llantas</dt><dd>{{ c.tireCondition }}</dd>
           </dl>
-
-          <h2>Historial de servicio</h2>
-          @if (c.serviceHistory.length === 0) {
-            <p>Sin historial de servicio registrado.</p>
-          } @else {
-            <ul class="history">
-              @for (s of c.serviceHistory; track $index) {
-                <li>
-                  <strong>{{ s.date | date: 'mediumDate' : 'UTC' }}</strong> — {{ s.description }}
-                  @if (s.mileage !== null) {
-                    <span class="history__km">({{ s.mileage | number }} km)</span>
-                  }
-                </li>
-              }
-            </ul>
-          }
         </section>
       </div>
     }

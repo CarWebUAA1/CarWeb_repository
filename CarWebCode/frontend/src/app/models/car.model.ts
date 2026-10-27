@@ -16,12 +16,6 @@ export interface CarPhoto {
   isMain: boolean;
 }
 
-export interface ServiceRecord {
-  date: string;
-  mileage: number | null;
-  description: string;
-}
-
 export interface CarDetail {
   id: number;
   brand: string;
@@ -38,7 +32,6 @@ export interface CarDetail {
   status: string;
   isAvailable: boolean;
   photos: CarPhoto[];
-  serviceHistory: ServiceRecord[];
 }
 
 export interface Paginated<T> {
