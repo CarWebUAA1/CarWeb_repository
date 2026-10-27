@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, linkedSignal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -11,7 +11,7 @@ const AVAILABILITY_CHECK_MS = 30_000;
 
 @Component({
   selector: 'app-car-detail',
-  imports: [RouterLink, CurrencyPipe, DatePipe, DecimalPipe, ButtonComponent, ImgFallbackDirective],
+  imports: [RouterLink, CurrencyPipe, DecimalPipe, ButtonComponent, ImgFallbackDirective],
   templateUrl: './car-detail.component.html',
   styleUrl: './car-detail.component.css',
 })

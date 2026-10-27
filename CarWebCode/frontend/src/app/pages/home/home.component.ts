@@ -15,4 +15,8 @@ export class HomeComponent {
   goToCatalog() {
     this.router.navigate(['/cars']);
   }
+
+  goToLogin() {
+    this.router.navigate(['/login']);
+  }
 }
