@@ -1,11 +1,45 @@
+import express, { Router } from "express";
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
+import cors from "cors";
 
-import dotenv from "dotenv";
-import app from "./app.js";
+interface serverOptions{
+    port:number,
+    routes:Router
+}
 
-dotenv.config();
+export class Server {
+    server = express();
 
-const port = Number(process.env["PORT"]) || 3000;
+private readonly port: number;
+constructor(options:serverOptions) {
+    this.port = options.port;
 
-app.listen(port, () => {
-    console.log(`Servidor CarWeb ejecutándose en http://localhost:${port}`);
-});
+    // Configured here (not in start) so tests can use `server` without listening on a port.
+    this.server.use(express.json());
+    this.server.use('/api/v1', options.routes);
+    this.server.use(notFoundHandler);
+    this.server.use(errorHandler);
+}
+
+start() {
+    this.server.listen(this.port, () => {
+    console.log(`server running on port: ${this.port}`);
+    });
+  }
+}
+    private readonly port: number;
+    private readonly routes: Router;
+    constructor(options:serverOptions) {
+        this.port = options.port;
+        this.routes = options.routes;
+    }
+
+    start() {
+        this.server.use(express.json());
+        this.server.use(cors());
+        this.server.use('/api/v1', this.routes);
+        this.server.listen(this.port, () => {
+            console.log(`server running on port: ${this.port}`);
+        });
+    }
+}

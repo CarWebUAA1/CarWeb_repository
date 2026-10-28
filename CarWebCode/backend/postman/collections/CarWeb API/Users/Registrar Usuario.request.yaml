@@ -1,0 +1,26 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/api/v1/users/register'
+order: 1000
+description: |-
+  Registra un nuevo usuario en el sistema.
+
+  **Campos requeridos:**
+  - **Name** (requerido): Nombre completo del usuario. Máximo 150 caracteres.
+  - **Email** (requerido): Dirección de correo electrónico con formato válido. Máximo 150 caracteres.
+  - **Password** (requerido): Contraseña del usuario. Mínimo 8 caracteres.
+
+  **Campos opcionales:**
+  - **Phone** (opcional): Número de teléfono del usuario. Entre 7 y 20 caracteres.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "Name": "{{userName}}",
+      "Email": "{{userEmail}}",
+      "Password": "{{userPassword}}",
+      "Phone": "{{userPhone}}"
+    }

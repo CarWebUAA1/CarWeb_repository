@@ -1,33 +1,13 @@
-CREATE DATABASE IF NOT EXISTS CarWeb;
 
 USE CarWeb;
 
-CREATE TABLE IF NOT EXISTS Employee (
-    EmployeeId INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS User (
+    UserId INT AUTO_INCREMENT PRIMARY KEY,
     Name VARCHAR(150) NOT NULL,
     Phone VARCHAR(20),
     Email VARCHAR(150) NOT NULL,
     Password VARCHAR(150) NOT NULL,
-    LastActivity INT NOT NULL DEFAULT 0,
-    IsActive BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE IF NOT EXISTS Clients(
-    ClientId INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(150),
-    phone INT,
-    Email VARCHAR(150) NOT NULL,
-    Password VARCHAR(150) NOT NULL,
-    LastActivity INT NOT NULL DEFAULT 0,
-    IsActive BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE IF NOT EXISTS Manager (
-    ManagerId INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(150) NOT NULL,
-    Phone VARCHAR(20),
-    Email VARCHAR(150) NOT NULL,
-    PasswordHash VARCHAR(150) NOT NULL,
+    role VARCHAR(30) NOT NULL DEFAULT 'client',
     LastActivity INT NOT NULL DEFAULT 0,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE
 );
@@ -52,6 +32,15 @@ CREATE TABLE IF NOT EXISTS Cars (
     TestDriveAuthorized BOOLEAN NOT NULL DEFAULT TRUE,
     SalePrice DECIMAL(12,2) NOT NULL,
     InventoryStatus BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS SpareParts(
+    PartId INT AUTO_INCREMENT PRIMARY KEY,
+    Brand VARCHAR(100) NOT NULL,
+    Model VARCHAR(100) NOT NULL,
+    PartStatus VARCHAR(30) NOT NULL,
+    Price DECIMAL(8,2)
+
 );
 
 CREATE TABLE IF NOT EXISTS CarPhotos (
@@ -82,13 +71,7 @@ CREATE TABLE IF NOT EXISTS Trades (
     ClientId INT NOT NULL,
     CarId INT NOT NULL,
     ManagerId INT UNSIGNED NOT NULL,
-    ContractNumber VARCHAR(50),
-    CONSTRAINT fk_trades_client
-        FOREIGN KEY (ClientId) REFERENCES Clients(ClientId)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_trades_car
-        FOREIGN KEY (CarId) REFERENCES Cars(CarId)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+    ContractNumber VARCHAR(50) 
 );
 
 CREATE TABLE IF NOT EXISTS Receipt (
@@ -97,12 +80,13 @@ CREATE TABLE IF NOT EXISTS Receipt (
     Ammount           DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     TradeId           INT UNSIGNED NOT NULL
 );
-
+ 
 CREATE TABLE IF NOT EXISTS StockMovement (
     MovementId       INT AUTO_INCREMENT PRIMARY KEY,
     MovementType     VARCHAR(100),
     Reason            TEXT,
     MovementDate      INT,
+    MovementDate      DATETIME NOT NULL,
     MovementStatus    VARCHAR(50)
 );
 

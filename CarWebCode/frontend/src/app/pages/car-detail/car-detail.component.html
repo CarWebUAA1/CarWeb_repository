@@ -1,0 +1,74 @@
+<main class="detail">
+  <a class="detail__back" routerLink="/cars">← Volver al catálogo</a>
+
+  @if (car.hasValue()) {
+    @let c = car.value();
+
+    @if (c === null) {
+      <p class="detail__status">No encontramos este auto. Puede que ya no esté publicado.</p>
+    } @else {
+      @if (!c.isAvailable) {
+        <p class="detail__warning" role="alert">
+          Este auto ya no está disponible ({{ c.status }}). No es posible agendar una cita ni comprarlo.
+        </p>
+      }
+
+      <div class="detail__layout">
+        <section class="gallery" aria-label="Fotos del auto">
+          <img
+            class="gallery__main"
+            appImgFallback
+            [src]="mainPhotoUrl()"
+            [alt]="c.brand + ' ' + c.model"
+          />
+          @if (c.photos.length > 1) {
+            <div class="gallery__thumbs">
+              @for (photo of c.photos; track photo.id; let i = $index) {
+                <button
+                  type="button"
+                  class="gallery__thumb"
+                  [class.gallery__thumb--active]="i === selectedPhoto()"
+                  [attr.aria-label]="'Ver foto ' + (i + 1)"
+                  (click)="selectedPhoto.set(i)"
+                >
+                  <img appImgFallback [src]="photo.url" alt="" loading="lazy" />
+                </button>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="info">
+          <h1 class="info__title">{{ c.brand }} {{ c.model }} {{ c.year }}</h1>
+          <p class="info__price">{{ c.price | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</p>
+
+          <div class="info__actions">
+            <app-button [disabled]="true">Agendar cita</app-button>
+            <app-button [disabled]="true">Comprar</app-button>
+          </div>
+          <p class="info__hint">Agendar cita y comprar estarán disponibles próximamente.</p>
+
+          <dl class="specs">
+            <dt>Marca</dt><dd>{{ c.brand }}</dd>
+            <dt>Modelo</dt><dd>{{ c.model }}</dd>
+            <dt>Año</dt><dd>{{ c.year }}</dd>
+            <dt>Versión</dt><dd>{{ c.version ?? '—' }}</dd>
+            <dt>Serie</dt><dd>{{ c.series ?? '—' }}</dd>
+            <dt>Kilometraje</dt><dd>{{ c.mileage | number }} km</dd>
+            <dt>Combustible</dt><dd>{{ c.fuelType ?? '—' }}</dd>
+            <dt>Transmisión</dt><dd>{{ c.transmission ?? '—' }}</dd>
+            <dt>Color</dt><dd>{{ c.color }}</dd>
+            <dt>Estado de las llantas</dt><dd>{{ c.tireCondition }}</dd>
+          </dl>
+        </section>
+      </div>
+    }
+  } @else if (car.error()) {
+    <div class="detail__status" role="alert">
+      <p>No pudimos cargar la información del auto.</p>
+      <button type="button" (click)="car.reload()">Reintentar</button>
+    </div>
+  } @else {
+    <p class="detail__status">Cargando…</p>
+  }
+</main>

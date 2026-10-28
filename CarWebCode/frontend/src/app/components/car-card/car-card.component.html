@@ -1,0 +1,14 @@
+<a class="car-card" [routerLink]="['/cars', car().id]">
+  <img
+    class="car-card__photo"
+    appImgFallback
+    [src]="car().photoUrl ?? placeholder"
+    [alt]="car().brand + ' ' + car().model"
+    loading="lazy"
+  />
+  <div class="car-card__body">
+    <h3 class="car-card__title">{{ car().brand }} {{ car().model }}</h3>
+    <p class="car-card__meta">{{ car().year }} · {{ car().mileage | number }} km</p>
+    <p class="car-card__price">{{ car().price | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</p>
+  </div>
+</a>

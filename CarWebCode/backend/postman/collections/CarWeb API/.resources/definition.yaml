@@ -1,0 +1,6 @@
+$kind: collection
+name: CarWeb API
+description: Colección de endpoints para la API de CarWeb.
+variables:
+  - key: baseUrl
+    value: 'http://localhost:3000'

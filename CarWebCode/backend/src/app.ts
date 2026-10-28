@@ -1,12 +1,23 @@
-
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import userRoutes from "./routes/user.routes.js";
+import dotenv from 'dotenv';
+import { Server } from './server.ts';
+import { AppRoutes } from "./routes/index.ts";
+import sequelizeConnection from './conf/sequelize.connection.ts';
 
 dotenv.config();
 
-const app = express();
+const port = Number(process.env["PORT"]);
+
+async function main() {
+  // ORM
+  try {
+    await sequelizeConnection.connect();
+    const server = new Server({ port, routes: AppRoutes.router });
+    server.start();
+  } catch (e) {
+    console.log(e);
+    process.exit(1);
+  }
+}
 
 app.use(cors({
     origin: "http://localhost:4200"
