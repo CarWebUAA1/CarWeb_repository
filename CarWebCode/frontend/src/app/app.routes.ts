@@ -17,5 +17,16 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/car-detail/car-detail.component').then((m) => m.CarDetailComponent),
   },
+  {
+    path: 'register',
+    title: 'Crear cuenta | CarWeb',
+    loadComponent: () =>
+      import('./pages/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'login',
+    title: 'Iniciar sesión | CarWeb',
+    loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

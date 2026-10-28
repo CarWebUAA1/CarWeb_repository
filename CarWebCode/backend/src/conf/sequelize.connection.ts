@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const { DB_USER, DB_HOST, DB_PASSWORD, DB_NAME, NODE_ENVIRONMENT } = process.env;
+const { DB_USER, DB_HOST, DB_PORT, DB_PASSWORD, DB_NAME, NODE_ENVIRONMENT } = process.env;
 
 export class SequelizeConnection {
   private readonly sequelize: Sequelize;
@@ -11,6 +11,7 @@ export class SequelizeConnection {
   constructor() {
     this.sequelize = new Sequelize(DB_NAME!, DB_USER!, DB_PASSWORD, {
       host: DB_HOST!,
+      port: Number(DB_PORT),
       dialect: "mysql",
       logging: NODE_ENVIRONMENT === "dev" ? console.log : false,
     });

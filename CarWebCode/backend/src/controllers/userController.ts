@@ -20,7 +20,7 @@ export async function registrarUsuario(req: Request, res: Response): Promise<voi
     }
 
     const [existing] = await pool.execute(
-      "SELECT UserId FROM user WHERE Email = ? LIMIT 1",
+      "SELECT UserId FROM User WHERE Email = ? LIMIT 1",
       [Email.trim().toLowerCase()]
     );
     if ((existing as any[]).length > 0) {
