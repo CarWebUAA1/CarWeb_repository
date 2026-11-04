@@ -1,11 +1,15 @@
 import type { Pool, RowDataPacket } from "mysql2/promise";
-import { CAR_STATUS } from "../constants/carStatus.js";
 import type { CarDetailDto, CarSummaryDto } from "../dtos/cars/CarDto.js";
+import { buildCatalogCondition, type CarFilters } from "./carFilters.js";
 
 export type CarDetailRecord = Omit<CarDetailDto, "isAvailable">;
 
 export interface CarRepository {
-  findAvailable(limit: number, offset: number): Promise<{ rows: CarSummaryDto[]; total: number }>;
+  findAvailable(
+    filters: CarFilters,
+    limit: number,
+    offset: number,
+  ): Promise<{ rows: CarSummaryDto[]; total: number }>;
   findById(id: number): Promise<CarDetailRecord | null>;
 }
 
@@ -48,11 +52,8 @@ interface CountRow extends RowDataPacket {
 export class MySqlCarRepository implements CarRepository {
   constructor(private readonly db: Pool) {}
 
-  async findAvailable(limit: number, offset: number) {
-    // Conditions are kept in a list so the brand/model filters (US-04) can be appended here.
-    const conditions = ["c.StatusOfCar = ?", "c.InventoryStatus = TRUE"];
-    const params: unknown[] = [CAR_STATUS.AVAILABLE];
-    const where = conditions.join(" AND ");
+  async findAvailable(filters: CarFilters, limit: number, offset: number) {
+    const { where, params } = buildCatalogCondition(filters);
 
     const [rows] = await this.db.query<CarSummaryRow[]>(
       `SELECT c.CarId, c.Brand, c.Model, c.YearOfCar, c.Mileage, c.SalePrice,
