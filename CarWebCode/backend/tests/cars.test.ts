@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { CarController } from "../src/controllers/car.controller.js";
 import type { CarSummaryDto } from "../src/dtos/cars/CarDto.js";
 import type { CarDetailRecord, CarRepository } from "../src/repositories/car.repository.js";
+import type { CarFilters } from "../src/repositories/carFilters.js";
 import { createCarRouter } from "../src/routes/car.routes.js";
 import { Server } from "../src/server.js";
 import { CarService } from "../src/services/car.service.js";
@@ -34,10 +35,12 @@ function detail(id: number, status: string): CarDetailRecord {
 // In-memory repository: 45 available cars and one sold car (id 99).
 class FakeCarRepository implements CarRepository {
   readonly calls: Array<{ limit: number; offset: number }> = [];
+  readonly filters: CarFilters[] = [];
   available = Array.from({ length: 45 }, (_, i) => summary(i + 1));
 
-  async findAvailable(limit: number, offset: number) {
+  async findAvailable(filters: CarFilters, limit: number, offset: number) {
     this.calls.push({ limit, offset });
+    this.filters.push(filters);
     return { rows: this.available.slice(offset, offset + limit), total: this.available.length };
   }
 
@@ -85,6 +88,39 @@ describe("Cars API", () => {
       const res = await request(app).get(`/api/v1/cars?page=${page}`);
       expect(res.status).toBe(400);
       expect(res.body.error).toBeDefined();
+    });
+  });
+
+  describe("GET /api/v1/cars with filters (US-04)", () => {
+    it("passes no filters when none are given", async () => {
+      await request(app).get("/api/v1/cars");
+      expect(repo.filters[0]).toEqual({ search: undefined, brand: undefined, model: undefined });
+    });
+
+    it("passes the trimmed search, brand and model to the repository", async () => {
+      const res = await request(app)
+        .get("/api/v1/cars")
+        .query({ page: "2", search: "  toyota corolla ", brand: " Toyota ", model: "Corolla" });
+      expect(res.status).toBe(200);
+      expect(repo.filters[0]).toEqual({ search: "toyota corolla", brand: "Toyota", model: "Corolla" });
+      expect(repo.calls[0]).toEqual({ limit: 20, offset: 20 });
+    });
+
+    it("ignores blank filters", async () => {
+      await request(app).get("/api/v1/cars").query({ search: "   ", brand: "" });
+      expect(repo.filters[0]).toEqual({ search: undefined, brand: undefined, model: undefined });
+    });
+
+    it("rejects a search longer than 100 characters", async () => {
+      const res = await request(app).get("/api/v1/cars").query({ search: "a".repeat(101) });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("search must be at most 100 characters");
+    });
+
+    it("rejects a repeated filter", async () => {
+      const res = await request(app).get("/api/v1/cars?brand=Toyota&brand=Honda");
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("brand must be a single text value");
     });
   });
 
