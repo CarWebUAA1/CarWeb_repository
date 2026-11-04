@@ -27,10 +27,12 @@ describe('CarCatalogComponent', () => {
   let fixture: ComponentFixture<CarCatalogComponent>;
   let http: HttpTestingController;
 
-  async function render(pageParam: string | undefined, response: Paginated<CarSummary>) {
+  async function render(pageParam: string | undefined, response: Paginated<CarSummary>, search?: string) {
     fixture.componentRef.setInput('page', pageParam);
+    fixture.componentRef.setInput('search', search);
     fixture.detectChanges();
-    http.expectOne(`/api/v1/cars?page=${response.page}`).flush(response);
+    const query = search ? `page=${response.page}&search=${encodeURIComponent(search.trim())}` : `page=${response.page}`;
+    http.expectOne(`/api/v1/cars?${query}`).flush(response);
     await fixture.whenStable();
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
@@ -50,13 +52,28 @@ describe('CarCatalogComponent', () => {
   it('shows the cars of the page with pagination', async () => {
     const el = await render(undefined, page(20, 24));
     expect(el.querySelectorAll('app-car-card')).toHaveLength(20);
-    expect(el.querySelector('.pagination')?.textContent).toContain('Página 1 de 2');
+    expect(el.querySelector('.pagination')?.textContent).toContain('Page 1 of 2');
   });
 
   it('shows a message when there are no cars', async () => {
     const el = await render('1', page(0, 0));
-    expect(el.textContent).toContain('No hay autos disponibles');
+    expect(el.textContent).toContain('There are no cars available');
     expect(el.querySelector('.pagination')).toBeNull();
+  });
+
+  it('sends the search term and shows what is being searched', async () => {
+    const el = await render(undefined, page(2, 2), ' toyota ');
+    expect(el.querySelectorAll('app-car-card')).toHaveLength(2);
+    expect(el.querySelector('.catalog__search')?.textContent).toContain('Results for “toyota”');
+  });
+
+  it('shows "No cars match your search" with a link to clear the search', async () => {
+    const el = await render(undefined, page(0, 0), 'xyz');
+    expect(el.textContent).toContain('No cars match your search.');
+    expect(el.textContent).not.toContain('There are no cars available');
+    const clear = el.querySelector<HTMLAnchorElement>('.catalog__status a');
+    expect(clear?.textContent).toContain('Clear search');
+    expect(clear?.getAttribute('href')).toBe('/cars');
   });
 
   it('falls back to page 1 for an invalid page param', async () => {

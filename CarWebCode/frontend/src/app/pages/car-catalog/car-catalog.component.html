@@ -1,21 +1,36 @@
+<app-site-header />
 <main class="catalog">
-  <h1>Catálogo de autos</h1>
+  <h1>Car catalog</h1>
+
+  @if (searchTerm()) {
+    <p class="catalog__search">
+      Results for “{{ searchTerm() }}”
+      <a routerLink="/cars">Clear search</a>
+    </p>
+  }
 
   @if (cars.isLoading()) {
-    <p class="catalog__status">Cargando autos…</p>
+    <p class="catalog__status">Loading cars…</p>
   } @else if (cars.error()) {
     <div class="catalog__status" role="alert">
-      <p>No pudimos cargar el catálogo.</p>
-      <button type="button" (click)="cars.reload()">Reintentar</button>
+      <p>We couldn't load the catalog.</p>
+      <button type="button" (click)="cars.reload()">Try again</button>
     </div>
   } @else if (cars.hasValue()) {
     @let result = cars.value();
 
-    @if (result.total === 0) {
-      <p class="catalog__status">No hay autos disponibles en este momento.</p>
+    @if (result.total === 0 && searchTerm()) {
+      <p class="catalog__status">
+        No cars match your search. <a routerLink="/cars">Clear search</a>
+      </p>
+    } @else if (result.total === 0) {
+      <p class="catalog__status">There are no cars available right now.</p>
     } @else if (result.data.length === 0) {
       <p class="catalog__status">
-        Esta página no existe. <a routerLink="/cars">Volver a la primera página</a>
+        This page doesn't exist.
+        <a routerLink="/cars" [queryParams]="{ page: null }" queryParamsHandling="merge">
+          Back to the first page
+        </a>
       </p>
     } @else {
       <ul class="catalog__grid">
@@ -25,13 +40,17 @@
       </ul>
 
       @if (result.totalPages > 1) {
-        <nav class="pagination" aria-label="Paginación del catálogo">
+        <nav class="pagination" aria-label="Catalog pagination">
           @if (result.page > 1) {
-            <a routerLink="/cars" [queryParams]="{ page: result.page - 1 }">← Anterior</a>
+            <a routerLink="/cars" [queryParams]="{ page: result.page - 1 }" queryParamsHandling="merge">
+              ← Previous
+            </a>
           }
-          <span>Página {{ result.page }} de {{ result.totalPages }}</span>
+          <span>Page {{ result.page }} of {{ result.totalPages }}</span>
           @if (result.page < result.totalPages) {
-            <a routerLink="/cars" [queryParams]="{ page: result.page + 1 }">Siguiente →</a>
+            <a routerLink="/cars" [queryParams]="{ page: result.page + 1 }" queryParamsHandling="merge">
+              Next →
+            </a>
           }
         </nav>
       }

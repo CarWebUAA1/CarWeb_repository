@@ -502,3 +502,332 @@ Este archivo había desaparecido del disco: quedó guardado en el commit de merg
 - Hay que confirmar si la rama `17-user-log-in2` tiene trabajo de login que todavía no está en `Development`.
 
 ---
+
+## 2026-10-27 — Arreglo del login (frontend + backend)
+
+### Qué estaba mal
+
+**Frontend** (`pages/login/login.component.ts`, código del equipo):
+
+| Problema | Efecto |
+|---|---|
+| La clase se llamaba `App`, con selector `app-root`, `templateUrl: './app.html'` y `styleUrl: './app.css'` | No compilaba: la ruta `/login` importa `LoginComponent`, y `app.html`/`app.css` no existen en esa carpeta. Además, `app-root` choca con el componente raíz de la app |
+| URL fija `http://localhost:3000/api/users/login` | Faltaba `/v1`, así que el backend respondía 404. Además, al saltarse el proxy dependía de CORS |
+| `HttpClientModule` en `imports` | Está obsoleto en Angular moderno, y el `HttpClient` ya lo provee `app.config.ts` |
+| `ChangeDetectorRef.detectChanges()` a mano y `*ngIf` | Funcionaba, pero no es el estilo del resto del proyecto (signals y `@if`) |
+
+**Backend:** **no existía el endpoint de login** en `Development`. En la rama `17-user-log-in2` había un `user.routes.ts` con `/login`, pero no funcionaba:
+- Consultaba la tabla `employee`, que ya no existe. El esquema actual tiene una sola tabla `User` con columna `role`.
+- Importaba `bcrypt`, que no está instalado (el proyecto usa `bcryptjs`), y `dbConnection`, que no existe (se llama `pool`).
+- No estaba montado en ninguna ruta.
+
+### Qué se hizo
+
+| Archivo | Cambio | Por qué |
+|---|---|---|
+| `backend/src/controllers/userController.ts` | Nueva función `iniciarSesion`: valida `email` y `password`; busca en `User` por correo (`trim` + minúsculas, igual que el registro); verifica `IsActive` y compara con `bcrypt.compare`; responde `{ ok, message, user: { id, name, email, role } }` | Va junto a `registrarUsuario`, en el mismo estilo del equipo. Nunca devuelve el hash de la contraseña |
+| (misma función) | Correo inexistente, contraseña incorrecta o cuenta inactiva dan **el mismo** 401 `Correo o contraseña incorrectos.` | Criterio de la historia *Log in*: un mensaje genérico que no revela qué campo estaba mal |
+| `backend/src/routes/userRoutes.ts` | `router.post("/login", iniciarSesion)` → `POST /api/v1/users/login` | Montado junto a `/register` |
+| `frontend/.../models/user.model.ts` | `LoginRequest`, `LoggedUser`, `LoginResponse` | Tipos del contrato |
+| `frontend/.../services/user.service.ts` | Método `login()` | Usa `environment.apiUrl` y el proxy, como el resto |
+| `frontend/.../pages/login/login.component.ts` | Ahora es `LoginComponent` (`app-login`, archivos `login.component.*`). Usa signals para `mensaje`, `exito` y `cargando`, y `finalize` para reactivar el botón | Compila, encaja con la ruta y sigue el estilo del proyecto |
+| `frontend/.../pages/login/login.component.html` | **Se mantuvo el diseño del equipo** (tarjeta oscura, logo "CW"). Cambios: `@if` en vez de `*ngIf`, el mensaje de éxito en otro color, `autocomplete` en los campos, placeholder `correo@ejemplo.com`, y el pie "Acceso exclusivo para empleados" pasó a ser **"¿No tienes cuenta? Regístrate"** | Ahora el login es para todos los usuarios de la tabla `User` (clientes, empleados y gerente). Un cliente recién registrado necesita poder entrar |
+| `frontend/.../pages/login/login.component.css` | Se agregaron `.mensaje--exito` y el color del enlace del pie | El resto del CSS del equipo queda igual |
+| `frontend/.../pages/login/login.component.spec.ts` | 2 pruebas: envío correcto (URL, cuerpo, mensaje de éxito) y error 401 genérico | Verificación automática |
+
+### Verificación
+
+- Backend: `tsc` sin errores; `npm test` → 14 pruebas pasan.
+- Frontend: `ng build` sin errores; `ng test` → **6 archivos, 17 pruebas**, todas pasan.
+- De punta a punta con MySQL, por el proxy (`localhost:4200/api/v1/users/login`), con un usuario de prueba (borrado al terminar):
+
+| Caso | Respuesta |
+|---|---|
+| Credenciales correctas | 200 `Inicio de sesión exitoso.` con `{ id, name, email, role: "client" }` |
+| Correo en mayúsculas y con espacios | 200 (se normaliza igual que en el registro) |
+| Contraseña incorrecta | 401 `Correo o contraseña incorrectos.` |
+| Correo inexistente | 401 `Correo o contraseña incorrectos.` (el mismo mensaje) |
+| Cuerpo vacío | 400 `El correo y la contraseña son obligatorios.` |
+
+### Pendiente (no incluido, son partes de la historia *Log in* / `Security.md`)
+
+- **Sesión:** hoy el login solo valida y responde. No hay token ni sesión, así que el resto de la app no "sabe" quién entró. Falta elegir el mecanismo (JWT o sesión con cookie).
+- **Bloqueo** de 15 minutos tras 3 intentos fallidos. Requiere una columna de intentos o de bloqueo en `User`.
+- **Menú según el rol** (User / Employee / Manager) después de entrar.
+- La rama `17-user-log-in2` sigue teniendo su `user.routes.ts` roto. Conviene no mezclarlo, o borrarlo al integrar.
+
+---
+
+## 2026-11-02 — Todo el código en inglés
+
+### Regla nueva (indicación del usuario)
+
+**Todo el código va en inglés** para que sea uniforme: nombres de variables y funciones, comentarios, textos de la interfaz, mensajes de la API, datos y expectativas de las pruebas, comentarios SQL y Postman. Al modificar un archivo que tenga español, se traduce. **La documentación** (esta bitácora y el `README.md`) sigue en español.
+
+### Qué se tradujo
+
+| Archivo | Cambios |
+|---|---|
+| `backend/src/controllers/userController.ts` | Funciones `registrarUsuario` → `registerUser` e `iniciarSesion` → `loginUser`. Los mensajes de la API pasan a inglés: `"Name, Email and Password are required."`, `"The email address is not valid."`, `"The password must be at least 8 characters long."`, `"An account with that email already exists."`, `"User registered successfully."`, `"Invalid email or password."`, `"Login successful."`, `"Email and password are required."` y los de error interno. También los `console.error` |
+| `backend/src/routes/userRoutes.ts` | Imports con los nombres nuevos |
+| `frontend/.../pages/login/login.component.{ts,html,css}` | `mensaje` → `message`, `exito` → `isSuccess`, `cargando` → `isLoading`, `iniciarSesion()` → `login()`, `respuesta` → `response`. Clases CSS `.mensaje` → `.message` y `.mensaje--exito` → `.message--success`. Textos: "Vehicle management system", "Email", "Password", "Log in", "Verifying...", "Don't have an account? Sign up" |
+| `frontend/.../pages/register/register.component.{ts,html}` | Textos de vuelta al inglés, como los tenía originalmente el equipo ("Create an Account", "Full Name", "Phone Number", "Register"…), y los mensajes de validación ("Please fill in the required fields.", "Passwords do not match.") |
+| `frontend/.../pages/car-catalog/car-catalog.component.html` | "Car catalog", "Loading cars…", "Try again", "There are no cars available right now.", "← Previous / Page X of Y / Next →" |
+| `frontend/.../pages/car-detail/car-detail.component.html` | Aviso de no disponible, botones "Schedule appointment" / "Buy" y la ficha técnica (Brand, Model, Year, Version, Series, Mileage, Fuel type, Transmission, Color, Tire condition) |
+| `frontend/.../pages/home/home.component.html` | "Welcome to CarWeb.", "View catalog", "Log in" |
+| `frontend/src/app/app.routes.ts` | Títulos de pestaña: "Catalog", "Car details", "Sign up", "Log in" |
+| `frontend/src/assets/images/car-placeholder.svg` | "Photo not available" |
+| `frontend/src/app/app.config.ts` | Se quitó el idioma `es-MX` (`LOCALE_ID` + `registerLocaleData`); queda el predeterminado de Angular, `en-US`, que coincide con la interfaz en inglés. La moneda sigue en **MXN**, y precios y kilometraje se ven igual (`$255,000`, `45,200 km`) |
+| Pruebas `*.spec.ts` del frontend | Textos esperados en inglés y datos de prueba (`John Smith`, `john@example.com`, `secret123`) |
+| `sql/seed_cars.sql` | Comentarios en inglés. Modelos `Serie 3` → `3 Series` y `Clase C` → `C-Class` (sus nombres comerciales en inglés). Se volvió a ejecutar el seed en la base local |
+| `backend/postman/` (workspace del equipo) | `Registrar Usuario.request.yaml` → `Register User.request.yaml`, con la descripción traducida; la descripción de la colección; y en el entorno `Juan Pérez` → `John Smith` |
+
+**Sin cambios:** `index.html` ya tenía `lang="en"`. `errorHandler`, `HttpError`, el catálogo del backend y los controladores del equipo ya estaban en inglés.
+
+### Verificación
+
+- Backend: `tsc` sin errores; `npm test` → 14 pruebas pasan.
+- Frontend: `ng build` sin errores; `ng test` → 17 pruebas pasan.
+- API real: `POST /users/login` vacío → `"Email and password are required."`; credenciales malas → `"Invalid email or password."`; registro con correo inválido → `"The email address is not valid."`.
+- Base de datos: el seed se ejecutó de nuevo (los autos 19 y 21 ahora son `3 Series` y `C-Class`).
+
+### Aviso
+
+La colección `CarWeb-US03-US05.postman_collection.json` y su carpeta `CarWebCode/postman/` están en la **papelera de Windows** (se borraron el 2026-10-27 a las 20:17). El equipo ahora usa el workspace de Postman en `backend/postman/`. No se restauró por si el borrado fue intencional. Si se quiere recuperar, hay que pasarla a inglés y moverla a `backend/postman/`.
+
+---
+
+## 2026-11-02 — Logos y paleta de colores de CarWeb
+
+### Paleta (`frontend/src/styles.css`)
+
+Los colores se definieron como **variables CSS globales**, con los mismos nombres de la paleta entregada. El proyecto usa CSS normal, no Tailwind, así que la paleta se tradujo a `--color-*`:
+
+| Variable | Valor | Uso |
+|---|---|---|
+| `--color-graphite` | `#26292C` | Texto principal; fondo del login |
+| `--color-inferno` | `#AF0E08` | Color principal: botones, enlaces, precios |
+| `--color-inferno-dark` | `#8C0B06` | Hover de botones; texto de avisos |
+| `--color-inferno-tint` | `#FBE9E8` | Fondo de avisos y errores |
+| `--color-ash` | `#96B0AD` | Bordes y foco en el login; texto de éxito sobre fondo oscuro |
+| `--color-ash-deep` | `#4F6866` | Texto secundario; bordes de los campos de formulario |
+| `--color-slate` | `#B9B5BA` | Texto claro sobre fondo oscuro; bordes decorativos |
+| `--color-slate-light` | `#ECEAED` | Fondo de imágenes, placa del ícono en el login |
+| `--color-page` | `#F7F7F8` | Fondo de página |
+
+Además se crearon **alias semánticos** (`--color-primary`, `--color-primary-hover`, `--color-text`, `--color-text-muted`, `--color-surface`, `--color-border`, `--color-border-strong`). Los componentes usan los alias, así que un cambio de marca se hace en un solo lugar.
+
+**Por qué:** antes cada componente tenía sus propios colores fijos (azul `#1d4ed8`, grises de Tailwind, azules en el registro, rojos parecidos en el login). Ahora toda la app usa una sola paleta. Solo quedan fijos el blanco (`#ffffff`) y las sombras negras, que son neutros.
+
+**Contraste verificado (WCAG AA, mínimo 4.5:1 para texto):** graphite/page 13.7 · ash-deep/blanco 6.0 · inferno/blanco 7.3 · blanco sobre inferno 7.3 · inferno-dark/inferno-tint 8.3 · slate sobre graphite 7.2. Dos combinaciones **no** pasaban y se evitaron:
+- `slate` como borde de campos sobre blanco: 2.0, cuando el mínimo para bordes es 3:1. Los campos usan `ash-deep` (6.0).
+- Líneas negras del logo (`#16161A`) sobre graphite: 1.2, invisibles. En el login el ícono va sobre una placa `slate-light` (15.1).
+
+### Logos (`frontend/src/assets/images/`)
+
+| Archivo | Dónde se usa |
+|---|---|
+| `carweb-icon.svg` | **Favicon** (`public/favicon.svg`, enlazado en `index.html`) e ícono del login sobre una placa clara (reemplaza el "CW") |
+| `carweb-logo.svg` | Página de inicio (logo grande dentro de la tarjeta) |
+| `carweb-logo-horizontal.svg` | Encabezado nuevo del sitio y parte superior del registro |
+
+### Otros cambios
+
+| Archivo | Cambio | Por qué |
+|---|---|---|
+| `components/site-header/` (nuevo) | Barra superior con el logo horizontal (enlace al inicio) y los enlaces **Catalog** y **Log in**; el enlace de la página actual se resalta (`routerLinkActive`) | El catálogo y el detalle no tenían navegación ni marca. No se usa en login y registro, que son pantallas completas con su propio diseño |
+| `pages/car-catalog`, `pages/car-detail` | Incluyen `<app-site-header />` | — |
+| `index.html` | `<title>CarWeb</title>` (antes "Frontend"), `favicon.svg` y `theme-color` graphite | La pestaña del navegador muestra el nombre y el ícono de CarWeb |
+| `public/favicon.ico` | Eliminado | Era el logo de Angular |
+| `assets/images/car-placeholder.svg` | Colores de la paleta (slate-light, slate, ash-deep) | Coherencia visual |
+| `pages/login/login.component.css` | Colores fijos → variables. La tarjeta usa graphite aclarado un 6% (`color-mix`), en lugar del `#303538` fuera de la paleta. El mensaje de error pasa a ser una "pastilla" `inferno-tint` con texto `inferno-dark`, en lugar del rosa `#FF8B85` | Se mantuvo el diseño oscuro del equipo, ahora con colores de la paleta |
+| `pages/register/register.component.css` | Azules y grises → variables de la paleta | El registro tenía su propia paleta azul |
+
+### Verificación
+
+- `ng build` sin errores; los cuatro SVG se copian a `dist/.../assets/images/`. `ng test` → 17 pruebas pasan.
+- Se tomaron **capturas** de inicio, login, registro, catálogo y detalle (Edge headless, con backend y MySQL reales): logos nítidos, ícono visible en el login y botones y precios en `inferno`.
+
+### Nota
+
+El rojo del texto de los logos es `#D3202F`, que **no** está en la paleta (`inferno` es `#AF0E08`). Los SVG se dejaron tal como se entregaron. Si se quiere unificar, hay que cambiar el `fill` de los logos a `#AF0E08`.
+
+---
+
+## 2026-11-02 — Home con header y footer
+
+### Qué se hizo
+
+La home ahora se arma con componentes: **header → contenido → footer**. El footer siempre queda al fondo de la ventana, aunque haya poco contenido.
+
+### Header (`components/site-header/`)
+
+Contiene, **en este orden**:
+
+| # | Elemento | Detalle |
+|---|---|---|
+| 1 | Logo | `carweb-logo-horizontal.svg`, enlace al inicio |
+| 2 | Barra de búsqueda | Componente propio, `<app-search-bar>` (ver abajo) |
+| 3 | Botón **Catalog** | Enlace a `/cars` con estilo de botón secundario (borde rojo). Se resalta cuando estás en el catálogo |
+| 4 | Botón **Log in** | Enlace a `/login` con estilo de botón principal (rojo lleno) |
+| 5 | Sidebar de acceso rápido | Componente propio, `<app-quick-access-sidebar>` (ver abajo) |
+
+Catalog y Log in son **enlaces con estilo de botón** (`<a>`), no `<button>`: lo que hacen es navegar, y así funcionan "abrir en otra pestaña" y los lectores de pantalla los anuncian como enlaces.
+
+**Responsive:**
+- Por debajo de 760 px, la barra de búsqueda pasa a su propia fila, debajo del logo y los botones.
+- Por debajo de 480 px, el logo y los botones se achican para que todo quepa en la primera fila a 360 px.
+- Verificado sin desplazamiento horizontal a 320, 360 y 400 px.
+
+Como el header ya se usaba en el catálogo y el detalle, esas páginas también tienen ahora la búsqueda, los botones y el sidebar.
+
+### Barra de búsqueda (`components/search-bar/`)
+
+- Campo `type="search"` con etiqueta oculta para lectores de pantalla ("Search cars") y botón de lupa (`aria-label="Search"`). Se envía con Enter o con el botón.
+- Emite el término **sin espacios al inicio y al final** (`output search`) e **ignora búsquedas vacías**. El placeholder se puede configurar (`input placeholder`, por defecto "Search by brand or model").
+- El header, al recibir la búsqueda, navega a `/cars?search=<término>`.
+- **Pendiente:** el catálogo **todavía no filtra** por ese parámetro. El filtro por marca y modelo es la **US-04** y necesita soporte en el backend.
+
+### Sidebar de acceso rápido (`components/quick-access-sidebar/`)
+
+- Botón de menú (☰) que abre un panel lateral desde la derecha, con fondo oscurecido.
+- Enlaces reales: **Home, Catalog, Log in, Sign up**.
+- Placeholders con la etiqueta **"Soon"** (no son enlaces): *My appointments*, *Sell my car*, *Spare parts*. Corresponden a historias todavía no implementadas.
+- **Accesibilidad:** `aria-expanded` y `aria-controls` en el botón. Se cierra con **Esc**, con clic en el fondo, con el botón ✕ o al elegir un enlace. Al abrir, el foco pasa al botón ✕; al cerrar, vuelve al botón ☰.
+- El panel solo se crea cuando está abierto (`@if`), así que cerrado no se puede llegar a él con Tab.
+
+### Footer (`components/site-footer/`)
+
+- Logo horizontal (enlace al inicio).
+- Columnas **placeholder**: *Company*, *Services* y *Support* con "Placeholder link", *Contact* con dirección, teléfono y correo de ejemplo, y una descripción de ejemplo. Son texto, no enlaces, para que no haya enlaces que no lleven a ningún lado.
+- Copyright: `© <año actual> CarWeb. All rights reserved.` (el año se calcula solo).
+- Fondo `slate-light`, porque las líneas negras del logo no se ven sobre fondos oscuros.
+
+### Home (`pages/home/`)
+
+- Ya no usa `CardComponent` ni `ButtonComponent`, ni tiene los métodos `goToCatalog()`/`goToLogin()`: esas acciones ahora están en el header.
+- Contenido: logo grande, "Welcome to CarWeb", una frase y un botón **Browse the catalog**.
+
+### Otros
+
+- `styles.css`: nueva clase global `.visually-hidden`, para etiquetas que solo leen los lectores de pantalla.
+
+### Verificación
+
+- `ng build` sin errores; `ng test` → **9 archivos, 25 pruebas** (8 nuevas):
+  - `search-bar`: emite el término recortado, ignora vacíos, la etiqueta está asociada al campo.
+  - `quick-access-sidebar`: cerrado por defecto; abre con sus enlaces y placeholders; cierra con Esc y con el fondo.
+  - `site-header`: el orden de los elementos es el pedido; la búsqueda navega a `/cars?search=…`.
+- Capturas reales con `puppeteer-core` + Edge, en el scratchpad y **no** en el proyecto: escritorio 1280 px, móvil 320/360/400 px (sin desbordamiento) y sidebar abierto (el foco queda en ✕).
+
+---
+
+## 2026-11-02 — Login con el mismo estilo que Sign up
+
+### Problema
+
+Las páginas de **Log in** y **Sign up** tenían diseños distintos: el login era una tarjeta oscura (graphite), con el ícono en una placa y el título "CarWeb", y el registro una tarjeta blanca sobre fondo claro, con el logo horizontal. Cada una tenía su propio archivo CSS, así que con el tiempo se iban a separar más.
+
+### Qué se hizo
+
+| Archivo | Cambio | Por qué |
+|---|---|---|
+| `pages/auth-form.css` (nuevo) | Hoja de estilos **compartida** por las dos páginas, tomada del registro. La clase contenedora se llama `.auth-card` (antes `.register-container`) | Un solo lugar para el diseño de las pantallas de autenticación. Si se cambia, cambian las dos |
+| `pages/register/register.component.css` y `pages/login/login.component.css` | **Eliminados**. Los dos componentes usan `styleUrl: '../auth-form.css'` | Ya no hay estilos duplicados ni divergentes |
+| `pages/login/login.component.html` | Misma estructura que el registro: logo horizontal (enlace al inicio), título **"Log in"**, subtítulo **"Welcome back to CarWeb"**, campos con etiqueta en negrita, botón rojo de ancho completo, mensaje y el enlace "Don't have an account? Sign up" | Las dos páginas se ven y se recorren igual |
+| (mismo archivo) | El mensaje usa las mismas clases que el registro: `.message` + `.success` / `.error`, en vez de `.message--success`. El párrafo está siempre en la página (`aria-live="polite"`), así los lectores de pantalla anuncian el resultado | Mismo comportamiento y mismo estilo de mensajes en las dos páginas |
+| `pages/register/register.component.html` | `class="register-container"` → `class="auth-card"` | Nombre genérico, porque lo usan las dos |
+| `pages/login/login.component.spec.ts` | Selectores `.message--success` → `.message.success` | Acompaña el cambio de clases |
+| `pages/auth-form.css` | `font-family: inherit` en campos y botón | Los navegadores ponen Arial por defecto en `input`/`button`. Ahora usan la misma fuente que el resto de la app |
+
+**Ya no se usa:** el diseño oscuro del login, la placa con el ícono y la sombra/borde `ash` de la tarjeta oscura. El ícono sigue en uso como favicon.
+
+### Verificación
+
+- `ng build` sin errores; `ng test` → 25 pruebas pasan.
+- Capturas de `/login` y `/register` a 1280 px: misma tarjeta, logo, tipografía, campos y botón.
+
+---
+
+## 2026-11-02 — Barra de búsqueda: backend (US-04) y conexión con el catálogo
+
+### Criterios de la US-04 y cómo se cumplen
+
+| Criterio | Cómo |
+|---|---|
+| Filtrar por marca, por modelo o por ambos | Parámetros `brand` y `model` (exactos), y `search` (texto libre que busca en marca **y** modelo) |
+| Solo autos disponibles que coincidan | Los filtros se **suman** a la condición del catálogo (`StatusOfCar = 'Available'` e `InventoryStatus = TRUE`) |
+| Ignora mayúsculas y acentos | Lo hace la *collation* de las columnas: `utf8mb4_0900_ai_ci` en MySQL 8 (la de la base local, verificado) o `utf8mb4_unicode_ci`. `ai` = *accent insensitive*, `ci` = *case insensitive* |
+| "No cars match your search" y poder limpiar el filtro | Mensaje en el catálogo con el enlace **Clear search** |
+
+### API
+
+`GET /api/v1/cars?page=N&search=…&brand=…&model=…` (todos opcionales y combinables con la paginación)
+
+| Parámetro | Comportamiento |
+|---|---|
+| `search` | Se separa en palabras y **cada palabra** tiene que aparecer en la marca o en el modelo (`LIKE %palabra%`). "toyota corolla" → Toyota Corolla; "COROLLA toyota" → igual; "mazda" → todos los Mazda |
+| `brand` / `model` | Coincidencia exacta (sin importar mayúsculas ni acentos). Pensados para filtros con listas desplegables más adelante |
+| Vacíos o solo espacios | Se ignoran |
+| Más de 100 caracteres | 400 `"<campo> must be at most 100 characters"` |
+| Repetidos (`?brand=a&brand=b`) | 400 `"<campo> must be a single text value"` |
+
+**Seguridad:** el texto siempre viaja como parámetro (`?`), nunca pegado al SQL. Además se **escapan** los comodines de `LIKE` (`%`, `_`, `\`): buscar "50%" busca literalmente "50%" y no "cualquier cosa que empiece con 50".
+
+### Backend: archivos
+
+| Archivo | Cambio |
+|---|---|
+| `src/repositories/carFilters.ts` (nuevo) | Interfaz `CarFilters`, `escapeLike()` y `buildCatalogCondition()`, que arma el `WHERE` y sus parámetros. Está separado del repositorio para poder probarlo **sin base de datos** |
+| `src/repositories/car.repository.ts` | `findAvailable(filters, limit, offset)` usa `buildCatalogCondition`. La misma condición se usa para la página y para el `COUNT(*)`, así el total y las páginas respetan el filtro |
+| `src/services/car.service.ts` | `listAvailable(page, filters = {})` pasa los filtros al repositorio |
+| `src/validators/car.ts` | `parseCarFilters(query)`: recorta espacios, ignora vacíos y valida tipo y largo (`MAX_FILTER_LENGTH = 100`) |
+| `src/controllers/car.controller.ts` | `GET /cars` lee y valida los filtros |
+| `tests/carFilters.test.ts` (nuevo, 5 pruebas) | Condición sin filtros, marca y modelo, varias palabras, comodines escapados |
+| `tests/cars.test.ts` (+5 pruebas) | Filtros recortados que llegan al repositorio, vacíos ignorados, 400 por largo y por repetidos |
+
+### Frontend: conexión con la barra del header
+
+| Archivo | Cambio |
+|---|---|
+| `services/car.service.ts` | `getCars(page, search?)` agrega `search` **solo** si hay término |
+| `pages/car-catalog/car-catalog.component.{ts,html,css}` | Lee `?search=` de la URL (`input search`). Muestra **Results for "…"** con **Clear search**. Si no hay resultados: **"No cars match your search."** con **Clear search** (distinto de "There are no cars available", que es cuando el catálogo está vacío). La paginación conserva la búsqueda (`queryParamsHandling="merge"`) |
+| `components/search-bar/search-bar.component.ts` | La salida se renombró de `search` a **`searchSubmit`** (ver el error abajo) |
+| `components/site-header/site-header.component.html` | `(searchSubmit)="onSearch($event)"` |
+| Pruebas | `car.service.spec` (+1), `car-catalog.component.spec` (+2), `site-header.component.spec` (+1, ver abajo) |
+
+### Error encontrado y corregido: `search=[object Event]`
+
+La prueba en un navegador real mostró que al buscar, la URL quedaba `/cars?search=[object Event]`.
+
+**Causa:** la salida del componente se llamaba `search`, pero Chrome y Edge disparan un **evento nativo `search`** en `<input type="search">` al presionar Enter. Ese evento sube hasta `<app-search-bar (search)="…">`, y Angular lo trataba como la salida del componente, así que se enviaba el objeto `Event` en lugar del texto. Las pruebas unitarias no lo detectaban porque jsdom no dispara ese evento.
+
+**Solución:** la salida ahora se llama `searchSubmit`, un nombre que no choca con ningún evento del navegador. Se agregó una prueba que dispara el evento nativo `search` y verifica que **no** se navegue.
+
+### README
+
+`CREATE DATABASE IF NOT EXISTS CarWeb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;` (antes sin charset). En MySQL 8 la *collation* por defecto ya ignora acentos, pero en **XAMPP/MariaDB** no está garantizado. Con esto la búsqueda se comporta igual en las dos. Solo aplica a bases nuevas.
+
+### Verificación
+
+- Backend: `tsc` sin errores; `npm test` → **4 archivos, 24 pruebas**.
+- Frontend: `ng build` sin errores; `ng test` → **9 archivos, 29 pruebas**.
+- API contra MySQL real: "toyota" → 2; "MÁZDA" → 2 Mazda; "toyota corolla" y "COROLLA toyota" → Corolla; "cr-v" → CR-V; `brand=honda` → 2; `brand=Honda&model=civic` → Civic; "hilux" (vendido), "kicks" (reservado) y "spark" (refacciones) → 0; "50%" → 0; blanco → los 24; 101 caracteres → 400.
+- Navegador real (Edge + puppeteer): búsqueda desde la barra de la home → catálogo filtrado; "xyz" → "No cars match your search." → Clear search → catálogo completo.
+
+### Pendientes / avisos
+
+- La barra del header **no muestra** el término actual cuando ya estás en `/cars?search=…`, porque cada página crea su propio header. Se ve arriba del listado ("Results for …").
+- `pages/car-detail/car-detail.component.html` ya no tiene `<app-site-header />` (se quitó fuera de esta sesión), pero el `.ts` todavía importa `SiteHeaderComponent`. Angular avisa `NG8113` en el build. Si el cambio fue intencional, hay que quitar también el import; si no, volver a poner el header.
+
+---
+
+## 2026-11-02 — Se vuelve a poner el header en el detalle del auto
+
+| Archivo | Cambio | Por qué |
+|---|---|---|
+| `frontend/src/app/pages/car-detail/car-detail.component.html` | Se agregó otra vez `<app-site-header />` en la primera línea | La línea se había quitado y el usuario pidió volver a ponerla. Sin ella, el detalle del auto no tenía logo, barra de búsqueda, botones *Catalog* / *Log in* ni menú de acceso rápido, a diferencia de la home y el catálogo. Además, el `.ts` seguía importando `SiteHeaderComponent` sin usarlo, y eso generaba el aviso `NG8113` en el build |
+
+**Verificación:** `ng build` sin errores ni el aviso `NG8113`; `ng test` → 29 pruebas pasan. Con esto se cierra el pendiente de la entrada anterior.
+
+---

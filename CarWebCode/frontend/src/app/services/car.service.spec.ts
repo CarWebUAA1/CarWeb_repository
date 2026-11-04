@@ -24,6 +24,13 @@ describe('CarService', () => {
     req.flush({ data: [], page: 2, pageSize: 20, total: 0, totalPages: 0 });
   });
 
+  it('adds the search term only when there is one', () => {
+    service.getCars(1, 'mazda').subscribe();
+    http.expectOne('/api/v1/cars?page=1&search=mazda').flush({ data: [], page: 1, pageSize: 20, total: 0, totalPages: 0 });
+    service.getCars(1, '').subscribe();
+    http.expectOne('/api/v1/cars?page=1').flush({ data: [], page: 1, pageSize: 20, total: 0, totalPages: 0 });
+  });
+
   it('emits null when the car does not exist', () => {
     let result: unknown = 'not emitted';
     service.getCar(7).subscribe((car) => (result = car));

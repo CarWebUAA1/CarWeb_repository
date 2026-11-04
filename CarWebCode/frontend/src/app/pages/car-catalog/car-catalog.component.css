@@ -7,7 +7,7 @@
 .catalog__status {
   padding: 2rem 0;
   text-align: center;
-  color: #4b5563;
+  color: var(--color-text-muted);
 }
 
 .catalog__grid {
@@ -29,5 +29,15 @@
 
 .pagination a {
   color: var(--color-primary);
+  font-weight: 600;
+}
+
+.catalog__search {
+  margin: -0.5rem 0 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.catalog__search a {
+  margin-left: 0.75rem;
   font-weight: 600;
 }

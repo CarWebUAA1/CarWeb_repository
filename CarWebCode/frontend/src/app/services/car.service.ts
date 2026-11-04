@@ -9,8 +9,11 @@ export class CarService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/cars`;
 
-  getCars(page: number): Observable<Paginated<CarSummary>> {
-    return this.http.get<Paginated<CarSummary>>(this.baseUrl, { params: { page } });
+  /** Available cars; `search` filters by brand or model (US-04). */
+  getCars(page: number, search?: string): Observable<Paginated<CarSummary>> {
+    const params: Record<string, string | number> = { page };
+    if (search) params['search'] = search;
+    return this.http.get<Paginated<CarSummary>>(this.baseUrl, { params });
   }
 
   /** Emits `null` when the car does not exist (404). */

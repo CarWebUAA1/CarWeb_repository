@@ -1,0 +1,43 @@
+<button
+  #toggle
+  type="button"
+  class="sidebar-toggle"
+  aria-label="Quick access"
+  aria-controls="quick-access-panel"
+  [attr.aria-expanded]="isOpen()"
+  (click)="isOpen() ? close() : open()"
+>
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  </svg>
+</button>
+
+@if (isOpen()) {
+  <div class="sidebar-backdrop" (click)="close()"></div>
+  <aside id="quick-access-panel" class="sidebar" aria-labelledby="quick-access-title">
+    <div class="sidebar__header">
+      <h2 id="quick-access-title" class="sidebar__title">Quick access</h2>
+      <button #closeButton type="button" class="sidebar__close" aria-label="Close quick access" (click)="close()">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <nav aria-label="Quick access">
+      <ul class="sidebar__list">
+        @for (link of links; track link.label) {
+          <li>
+            @if (link.route) {
+              <a class="sidebar__link" [routerLink]="link.route" (click)="close()">{{ link.label }}</a>
+            } @else {
+              <span class="sidebar__link sidebar__link--soon">
+                {{ link.label }} <span class="sidebar__badge">Soon</span>
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    </nav>
+  </aside>
+}

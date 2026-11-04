@@ -1,5 +1,5 @@
--- Datos de prueba para US-03 (catálogo) y US-05 (detalle del auto).
--- Ejecutar después de CarWeb.sql. Borra y vuelve a crear los autos de prueba.
+-- Test data for US-03 (car catalog) and US-05 (car details).
+-- Run after CarWeb.sql. Deletes and recreates the test cars.
 USE CarWeb;
 
 -- DELETE instead of TRUNCATE: MySQL/MariaDB refuse to TRUNCATE a table
@@ -31,9 +31,9 @@ INSERT INTO Cars (CarId, VIN, Plates, Brand, Model, YearOfCar, VersionOfCar, Ser
 (16, '3VWCARWEB00000016', 'CWB-016', 'Kia', 'Sportage', '2022', 'SXL', 'NQ5', 12100, 'Gasoline', 'Automatic', 'Green', 'Available', 'Very good', 470000.00, 535000.00, 535000.00),
 (17, '3VWCARWEB00000017', 'CWB-017', 'Hyundai', 'Accent', '2020', 'GL', 'HC', 55100, 'Gasoline', 'Manual', 'White', 'Available', 'Fair', 165000.00, 192000.00, 192000.00),
 (18, '3VWCARWEB00000018', 'CWB-018', 'Hyundai', 'Tucson', '2021', 'Limited', 'NX4', 31200, 'Gasoline', 'Automatic', 'Black', 'Available', 'Good', 440000.00, 499000.00, 499000.00),
-(19, '3VWCARWEB00000019', 'CWB-019', 'BMW', 'Serie 3', '2019', '320i', 'G20', 58600, 'Gasoline', 'Automatic', 'Blue', 'Available', 'Good', 480000.00, 549000.00, 549000.00),
+(19, '3VWCARWEB00000019', 'CWB-019', 'BMW', '3 Series', '2019', '320i', 'G20', 58600, 'Gasoline', 'Automatic', 'Blue', 'Available', 'Good', 480000.00, 549000.00, 549000.00),
 (20, '3VWCARWEB00000020', 'CWB-020', 'Audi', 'A3', '2020', 'Sedan 35 TFSI', '8Y', 41000, 'Gasoline', 'Automatic', 'White', 'Available', 'Good', 430000.00, 489000.00, 489000.00),
-(21, '3VWCARWEB00000021', 'CWB-021', 'Mercedes-Benz', 'Clase C', '2018', 'C200', 'W205', 77800, 'Gasoline', 'Automatic', 'Silver', 'Available', 'Fair', 450000.00, 515000.00, 515000.00),
+(21, '3VWCARWEB00000021', 'CWB-021', 'Mercedes-Benz', 'C-Class', '2018', 'C200', 'W205', 77800, 'Gasoline', 'Automatic', 'Silver', 'Available', 'Fair', 450000.00, 515000.00, 515000.00),
 (22, '3VWCARWEB00000022', 'CWB-022', 'Renault', 'Duster', '2021', 'Intens', 'HM', 34700, 'Gasoline', 'Manual', 'Orange', 'Available', 'Good', 230000.00, 264000.00, 264000.00),
 (23, '3VWCARWEB00000023', 'CWB-023', 'Seat', 'Ibiza', '2020', 'Style', 'KJ', 43900, 'Gasoline', 'Manual', 'Red', 'Available', 'Good', 195000.00, 226000.00, 226000.00),
 (24, '3VWCARWEB00000024', 'CWB-024', 'Suzuki', 'Swift', '2022', 'GLX', 'A2L', 9800, 'Gasoline', 'Automatic', 'Yellow', 'Available', 'Very good', 225000.00, 259000.00, 259000.00),
@@ -42,9 +42,9 @@ INSERT INTO Cars (CarId, VIN, Plates, Brand, Model, YearOfCar, VersionOfCar, Ser
 (27, '3VWCARWEB00000027', 'CWB-027', 'Nissan', 'Kicks', '2021', 'Exclusive', 'P15', 25000, 'Gasoline', 'CVT', 'Orange', 'Reserved', 'Good', 300000.00, 345000.00, 345000.00),
 (28, '3VWCARWEB00000028', 'CWB-028', 'Chevrolet', 'Spark', '2015', 'LT', 'M300', 160000, 'Gasoline', 'Manual', 'Green', 'Spare parts', 'Worn', 30000.00, 45000.00, 45000.00);
 
--- Fotos: URLs de ejemplo (en este sprint no se suben fotos).
--- El auto 3 tiene una foto principal rota a propósito para probar la imagen de reemplazo.
--- El auto 11 no tiene fotos.
+-- Photos: sample URLs (photo upload is out of scope for this sprint).
+-- Car 3 has a deliberately broken main photo to test the placeholder image.
+-- Car 11 has no photos.
 INSERT INTO CarPhotos (CarId, PhotoUrl, UploadDate, IsMainPhoto) VALUES
 (1, 'https://picsum.photos/seed/carweb-1-1/800/600', NOW(), TRUE),
 (1, 'https://picsum.photos/seed/carweb-1-2/800/600', NOW(), FALSE),

@@ -1,0 +1,20 @@
+<header class="site-header">
+  <a class="site-header__brand" routerLink="/" aria-label="CarWeb home">
+    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+  </a>
+
+  <app-search-bar class="site-header__search" (searchSubmit)="onSearch($event)" />
+
+  <nav class="site-header__nav" aria-label="Main">
+    <a
+      routerLink="/cars"
+      routerLinkActive="site-header__btn--active"
+      class="site-header__btn site-header__btn--secondary"
+    >
+      Catalog
+    </a>
+    <a routerLink="/login" class="site-header__btn site-header__btn--primary">Log in</a>
+  </nav>
+
+  <app-quick-access-sidebar />
+</header>

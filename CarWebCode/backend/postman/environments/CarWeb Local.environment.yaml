@@ -5,11 +5,11 @@ values:
     enabled: true
     type: default
   - key: userName
-    value: 'Juan Pérez'
+    value: 'John Smith'
     enabled: true
     type: default
   - key: userEmail
-    value: 'juan@example.com'
+    value: 'john@example.com'
     enabled: true
     type: default
   - key: userPassword

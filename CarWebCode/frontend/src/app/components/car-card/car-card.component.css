@@ -4,7 +4,7 @@
   height: 100%;
   border-radius: 0.75rem;
   overflow: hidden;
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
   color: inherit;
   text-decoration: none;
@@ -20,7 +20,7 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  background: #e5e7eb;
+  background: var(--color-slate-light);
 }
 
 .car-card__body {
@@ -34,7 +34,7 @@
 
 .car-card__meta {
   margin: 0.25rem 0 0.5rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .car-card__price {

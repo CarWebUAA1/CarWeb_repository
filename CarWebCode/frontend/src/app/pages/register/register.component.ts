@@ -14,7 +14,7 @@ interface FormMessage {
   selector: 'app-register',
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css',
+  styleUrl: '../auth-form.css',
 })
 export class RegisterComponent {
   private readonly userService = inject(UserService);
@@ -33,13 +33,13 @@ export class RegisterComponent {
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.message.set({ text: 'Revisa los campos obligatorios.', type: 'error' });
+      this.message.set({ text: 'Please fill in the required fields.', type: 'error' });
       return;
     }
 
     const { name, phone, email, password, confirmPassword } = this.form.getRawValue();
     if (password !== confirmPassword) {
-      this.message.set({ text: 'Las contraseñas no coinciden.', type: 'error' });
+      this.message.set({ text: 'Passwords do not match.', type: 'error' });
       return;
     }
 
@@ -60,8 +60,8 @@ export class RegisterComponent {
 
 function errorText(err: unknown): string {
   if (err instanceof HttpErrorResponse) {
-    if (err.status === 0) return 'No se pudo conectar con el servidor.';
+    if (err.status === 0) return 'Could not connect to the server.';
     if (typeof err.error?.message === 'string') return err.error.message;
   }
-  return 'No se pudo registrar el usuario.';
+  return 'Could not register the user.';
 }

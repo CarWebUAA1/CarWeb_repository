@@ -23,11 +23,11 @@ describe('RegisterComponent', () => {
   }
 
   const valid = {
-    name: 'Juan Pérez',
+    name: 'John Smith',
     phone: '4491234567',
-    email: 'juan@example.com',
-    password: 'secreta123',
-    confirmPassword: 'secreta123',
+    email: 'john@example.com',
+    password: 'secret123',
+    confirmPassword: 'secret123',
   };
 
   beforeEach(() => {
@@ -46,14 +46,14 @@ describe('RegisterComponent', () => {
   it('does not call the API when required fields are empty', () => {
     submit();
     http.expectNone('/api/v1/users/register');
-    expect(el.querySelector('.message')?.textContent).toContain('Revisa los campos');
+    expect(el.querySelector('.message')?.textContent).toContain('Please fill in the required fields');
   });
 
   it('does not call the API when passwords differ', () => {
-    fill({ ...valid, confirmPassword: 'otra-clave' });
+    fill({ ...valid, confirmPassword: 'other-password' });
     submit();
     http.expectNone('/api/v1/users/register');
-    expect(el.querySelector('.message')?.textContent).toContain('no coinciden');
+    expect(el.querySelector('.message')?.textContent).toContain('do not match');
   });
 
   it('sends the user and shows the backend message', () => {
@@ -62,14 +62,14 @@ describe('RegisterComponent', () => {
     const req = http.expectOne('/api/v1/users/register');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
-      Name: 'Juan Pérez',
+      Name: 'John Smith',
       Phone: '4491234567',
-      Email: 'juan@example.com',
-      Password: 'secreta123',
+      Email: 'john@example.com',
+      Password: 'secret123',
     });
-    req.flush({ ok: true, message: 'Usuario registrado correctamente.', userId: 1 }, { status: 201, statusText: 'Created' });
+    req.flush({ ok: true, message: 'User registered successfully.', userId: 1 }, { status: 201, statusText: 'Created' });
     fixture.detectChanges();
-    expect(el.querySelector('.message.success')?.textContent).toContain('Usuario registrado correctamente.');
+    expect(el.querySelector('.message.success')?.textContent).toContain('User registered successfully.');
   });
 
   it('shows the backend error message', () => {
@@ -77,8 +77,8 @@ describe('RegisterComponent', () => {
     submit();
     http
       .expectOne('/api/v1/users/register')
-      .flush({ ok: false, message: 'Ya existe una cuenta con ese correo.' }, { status: 409, statusText: 'Conflict' });
+      .flush({ ok: false, message: 'An account with that email already exists.' }, { status: 409, statusText: 'Conflict' });
     fixture.detectChanges();
-    expect(el.querySelector('.message.error')?.textContent).toContain('Ya existe una cuenta');
+    expect(el.querySelector('.message.error')?.textContent).toContain('An account with that email already exists');
   });
 });

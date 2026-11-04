@@ -1,7 +1,50 @@
-.home {
+/* Header on top, footer at the bottom, content fills the space in between. */
+:host {
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
+}
+
+.home {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
+  padding: 3rem 1rem;
+}
+
+.hero {
+  max-width: 560px;
+  text-align: center;
+}
+
+.hero__logo {
+  display: block;
+  width: min(280px, 80%);
+  height: auto;
+  margin: 0 auto 1.5rem;
+}
+
+.hero__title {
+  margin: 0;
+  color: var(--color-graphite);
+}
+
+.hero__text {
+  margin: 0.75rem 0 1.5rem;
+  color: var(--color-text-muted);
+}
+
+.hero__cta {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.hero__cta:hover {
+  background: var(--color-primary-hover);
 }

@@ -1,22 +1,12 @@
-import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { ButtonComponent } from '../../components/button/button.component';
-import { CardComponent } from '../../components/card/card.component';
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SiteFooterComponent } from '../../components/site-footer/site-footer.component';
+import { SiteHeaderComponent } from '../../components/site-header/site-header.component';
 
 @Component({
   selector: 'app-home',
-  imports: [ButtonComponent, CardComponent],
+  imports: [RouterLink, SiteHeaderComponent, SiteFooterComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
-export class HomeComponent {
-  private readonly router = inject(Router);
-
-  goToCatalog() {
-    this.router.navigate(['/cars']);
-  }
-
-  goToLogin() {
-    this.router.navigate(['/login']);
-  }
-}
+export default class HomeComponent {}

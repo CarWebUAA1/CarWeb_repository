@@ -1,5 +1,47 @@
-<main class="login">
-  <h1>Iniciar sesión</h1>
-  <p>Próximamente.</p>
-  <p>¿No tienes cuenta? <a routerLink="/register">Regístrate</a></p>
+<main class="auth-card">
+  <a class="brand" routerLink="/" aria-label="CarWeb home">
+    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+  </a>
+  <h1>Log in</h1>
+  <p class="subtitle">Welcome back to CarWeb</p>
+
+  <form (submit)="login($event)">
+    <label for="email">Email</label>
+    <input
+      id="email"
+      type="email"
+      name="email"
+      [(ngModel)]="email"
+      maxlength="150"
+      placeholder="example@gmail.com"
+      autocomplete="email"
+      required
+    />
+
+    <label for="password">Password</label>
+    <input
+      id="password"
+      type="password"
+      name="password"
+      [(ngModel)]="password"
+      autocomplete="current-password"
+      required
+    />
+
+    <button type="submit" [disabled]="isLoading()">
+      {{ isLoading() ? 'Verifying…' : 'Log in' }}
+    </button>
+  </form>
+
+  <p
+    class="message"
+    [class.success]="isSuccess()"
+    [class.error]="!isSuccess()"
+    role="status"
+    aria-live="polite"
+  >
+    {{ message() }}
+  </p>
+
+  <p class="switch">Don't have an account? <a routerLink="/register">Sign up</a></p>
 </main>

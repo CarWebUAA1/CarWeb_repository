@@ -1,7 +1,12 @@
+<app-site-header />
+
 <main class="home">
-  <app-card title="CarWeb">
-    <p>Bienvenido a CarWeb.</p>
-    <app-button (clicked)="goToCatalog()">Ver catálogo</app-button>
-    <app-button (clicked)="goToLogin()">Iniciar sesión</app-button>
-  </app-card>
+  <section class="hero">
+    <img class="hero__logo" src="/assets/images/carweb-logo.svg" alt="" width="715" height="318" />
+    <h1 class="hero__title">Welcome to CarWeb</h1>
+    <p class="hero__text">Find your next car or sell yours with confidence.</p>
+    <a class="hero__cta" routerLink="/cars">Browse the catalog</a>
+  </section>
 </main>
+
+<app-site-footer />

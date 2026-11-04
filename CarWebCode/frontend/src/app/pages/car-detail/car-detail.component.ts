@@ -4,6 +4,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { ButtonComponent } from '../../components/button/button.component';
 import { CAR_PLACEHOLDER, ImgFallbackDirective } from '../../directives/img-fallback.directive';
+import { SiteHeaderComponent } from '../../components/site-header/site-header.component';
 import { CarService } from '../../services/car.service';
 
 /** How often the page re-checks that the car is still available. */
@@ -11,7 +12,7 @@ const AVAILABILITY_CHECK_MS = 30_000;
 
 @Component({
   selector: 'app-car-detail',
-  imports: [RouterLink, CurrencyPipe, DecimalPipe, ButtonComponent, ImgFallbackDirective],
+  imports: [SiteHeaderComponent, RouterLink, CurrencyPipe, DecimalPipe, ButtonComponent, ImgFallbackDirective],
   templateUrl: './car-detail.component.html',
   styleUrl: './car-detail.component.css',
 })

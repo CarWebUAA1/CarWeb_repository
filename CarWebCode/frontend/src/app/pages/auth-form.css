@@ -1,3 +1,5 @@
+/* Shared styles for the authentication pages (log in and sign up), so both look the same. */
+
 :host {
   display: flex;
   justify-content: center;
@@ -5,75 +7,89 @@
   min-height: 100dvh;
   padding: 20px;
   box-sizing: border-box;
-  background: #f1f4f8;
+  background: var(--color-page);
 }
 
-.register-container {
+.auth-card {
   width: 100%;
   max-width: 430px;
   padding: 32px;
   box-sizing: border-box;
-  background: white;
+  background: var(--color-surface);
   border-radius: 14px;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.brand img {
+  display: block;
+  height: 40px;
+  width: auto;
 }
 
 h1 {
   margin-top: 0;
   text-align: center;
-  color: #172b4d;
+  color: var(--color-graphite);
 }
 
 .subtitle {
   margin-bottom: 25px;
   text-align: center;
-  color: #667085;
+  color: var(--color-text-muted);
 }
 
 label {
   display: block;
   margin: 14px 0 6px;
   font-weight: bold;
-  color: #344054;
+  color: var(--color-graphite);
 }
 
 input {
   width: 100%;
+  font-family: inherit;
   padding: 12px;
   box-sizing: border-box;
-  border: 1px solid #d0d5dd;
+  border: 1px solid var(--color-border-strong);
   border-radius: 7px;
   font-size: 15px;
 }
 
 input:focus {
-  outline: 2px solid #84adff;
-  border-color: #4678e8;
+  outline: 2px solid var(--color-ash);
+  border-color: var(--color-inferno);
 }
 
 input.ng-invalid.ng-touched {
-  border-color: #c62828;
+  border-color: var(--color-inferno);
 }
 
 .hint {
-  color: #667085;
+  color: var(--color-text-muted);
 }
 
 button {
   width: 100%;
+  font-family: inherit;
   margin-top: 24px;
   padding: 13px;
   border: none;
   border-radius: 7px;
-  background: #2457c5;
-  color: white;
+  background: var(--color-primary);
+  color: #ffffff;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
 }
 
 button:hover {
-  background: #1946a5;
+  background: var(--color-primary-hover);
 }
 
 button:disabled {
@@ -88,11 +104,11 @@ button:disabled {
 }
 
 .success {
-  color: #16803c;
+  color: var(--color-ash-deep);
 }
 
 .error {
-  color: #c62828;
+  color: var(--color-inferno);
 }
 
 .switch {

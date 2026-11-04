@@ -1,0 +1,32 @@
+<footer class="site-footer">
+  <div class="site-footer__top">
+    <div class="site-footer__brand">
+      <a routerLink="/" aria-label="CarWeb home">
+        <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+      </a>
+      <p class="site-footer__placeholder">Placeholder: short description of CarWeb.</p>
+    </div>
+
+    @for (column of columns; track column.title) {
+      <div class="site-footer__column">
+        <h2 class="site-footer__heading">{{ column.title }}</h2>
+        <ul class="site-footer__list">
+          @for (link of column.links; track $index) {
+            <li class="site-footer__placeholder">{{ link }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <div class="site-footer__column">
+      <h2 class="site-footer__heading">Contact</h2>
+      <ul class="site-footer__list">
+        <li class="site-footer__placeholder">Placeholder address</li>
+        <li class="site-footer__placeholder">Placeholder phone</li>
+        <li class="site-footer__placeholder">Placeholder email</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="site-footer__copyright">© {{ year }} CarWeb. All rights reserved.</p>
+</footer>

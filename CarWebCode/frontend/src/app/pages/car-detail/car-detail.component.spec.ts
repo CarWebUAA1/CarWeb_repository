@@ -61,19 +61,19 @@ describe('CarDetailComponent', () => {
     expect(el.querySelector('.specs')?.textContent).toContain('CVT');
     expect(el.querySelectorAll('.gallery__thumb')).toHaveLength(2);
     const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>('app-button button'));
-    expect(buttons.map((b) => b.textContent?.trim())).toEqual(['Agendar cita', 'Comprar']);
+    expect(buttons.map((b) => b.textContent?.trim())).toEqual(['Schedule appointment', 'Buy']);
     expect(buttons.every((b) => b.disabled)).toBe(true);
     expect(el.querySelector('.detail__warning')).toBeNull();
   });
 
   it('warns when the car is no longer available', async () => {
     const el = await render(car({ status: 'Sold', isAvailable: false }));
-    expect(el.querySelector('.detail__warning')?.textContent).toContain('ya no está disponible');
+    expect(el.querySelector('.detail__warning')?.textContent).toContain('no longer available');
   });
 
   it('shows a not-found message for a missing car', async () => {
     const el = await render(null);
-    expect(el.textContent).toContain('No encontramos este auto');
+    expect(el.textContent).toContain("We couldn't find this car");
   });
 
   it('uses the placeholder when the car has no photos', async () => {

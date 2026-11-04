@@ -1,10 +1,48 @@
-/* Estilos globales */
+/* Global styles */
+
+/* CarWeb color palette. Use these variables instead of hard-coded colors. */
 :root {
-  --color-primary: #1d4ed8;
+  --color-graphite: #26292c;
+  --color-inferno: #af0e08;
+  --color-inferno-dark: #8c0b06;
+  --color-inferno-tint: #fbe9e8;
+  --color-ash: #96b0ad;
+  --color-ash-deep: #4f6866;
+  --color-slate: #b9b5ba;
+  --color-slate-light: #eceaed;
+  --color-page: #f7f7f8;
+
+  /* Semantic aliases used by the components. */
+  --color-primary: var(--color-inferno);
+  --color-primary-hover: var(--color-inferno-dark);
+  --color-text: var(--color-graphite);
+  --color-text-muted: var(--color-ash-deep);
+  --color-surface: #ffffff;
+  --color-border: var(--color-slate);
+  /* Inputs need 3:1 contrast against the background, which slate (2:1) does not reach. */
+  --color-border-strong: var(--color-ash-deep);
 }
 
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f5;
+  color: var(--color-text);
+  background: var(--color-page);
+}
+
+a {
+  color: var(--color-primary);
+}
+
+/* Hides content visually while keeping it available to screen readers (e.g. form labels). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

@@ -16,7 +16,7 @@
    - **Workbench:** usa la conexión *Local instance* o créala con el botón **+**.
 3. Crea la base (una sola vez):
    ```sql
-   CREATE DATABASE IF NOT EXISTS CarWeb;
+   CREATE DATABASE IF NOT EXISTS CarWeb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 4. Ejecuta los scripts completos, en este orden:
    1. `CarWebCode/sql/CarWeb.sql`: crea las tablas.

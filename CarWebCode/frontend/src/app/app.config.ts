@@ -1,17 +1,12 @@
-import { registerLocaleData } from '@angular/common';
 import { provideHttpClient, withFetch } from '@angular/common/http';
-import localeEsMx from '@angular/common/locales/es-MX';
 import {
   ApplicationConfig,
   DEFAULT_CURRENCY_CODE,
-  LOCALE_ID,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
-
-registerLocaleData(localeEsMx);
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -19,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideClientHydration(),
     provideHttpClient(withFetch()),
-    { provide: LOCALE_ID, useValue: 'es-MX' },
+    // Prices are in Mexican pesos; number formatting uses Angular's default en-US locale.
     { provide: DEFAULT_CURRENCY_CODE, useValue: 'MXN' },
   ]
 };
