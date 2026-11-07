@@ -18,15 +18,10 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Only staff have accounts (customers do not log in): look in employees, then managers.
-    // The role comes from the table. The email collation ignores case.
-    const normalizedEmail = email.trim();
+    // Only staff have accounts (customers do not log in). The email collation ignores case.
     const [rows] = await pool.execute(
-      `SELECT employee_id AS id, name, email, password_hash, 'employee' AS role FROM employees WHERE email = ?
-       UNION ALL
-       SELECT manager_id AS id, name, email, password_hash, 'manager' AS role FROM managers WHERE email = ?
-       LIMIT 1`,
-      [normalizedEmail, normalizedEmail]
+      "SELECT staff_id, name, email, password_hash, role FROM staff WHERE email = ? LIMIT 1",
+      [email.trim()]
     );
     const user = (rows as any[])[0];
 
@@ -38,7 +33,8 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
     res.json({
       ok: true,
       message: "Login successful.",
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      // The API keeps sending the role in lowercase ('employee' | 'manager'), as the frontend expects.
+      user: { id: user.staff_id, name: user.name, email: user.email, role: String(user.role).toLowerCase() }
     });
   } catch (error) {
     console.error("Error logging in:", error);

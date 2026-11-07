@@ -16,15 +16,13 @@ USE carweb;
 -- ---------------------------------------------------------------------
 -- Staff
 -- ---------------------------------------------------------------------
-INSERT INTO managers (manager_id, name, phone, email, password_hash) VALUES
+INSERT INTO staff (staff_id, name, phone, email, password_hash, role) VALUES
 (1, 'Maria Lopez', '4491000001', 'maria.lopez@carweb.test',
- '$2b$12$jc5u0B53sRZL92wib3OY0OrVgJ.tvzycyocZgHJlRFiK4IwcwLiLe');
-
-INSERT INTO employees (employee_id, name, phone, email, password_hash) VALUES
-(1, 'Ana Torres',  '4491000002', 'ana.torres@carweb.test',
- '$2b$12$uvSGutGx4TYF/704Hk6cE.1D75ccHdnaLGnH8sF5fPaOUDRUSxKVK'),
-(2, 'Luis Medina', '4491000003', 'luis.medina@carweb.test',
- '$2b$12$oeqw6nNdlnJzzvsRhy1PdOsosgJB8ZS6MH5wyBHR.U2eNlhhHF7sW');
+ '$2b$12$jc5u0B53sRZL92wib3OY0OrVgJ.tvzycyocZgHJlRFiK4IwcwLiLe', 'Manager'),
+(2, 'Ana Torres',  '4491000002', 'ana.torres@carweb.test',
+ '$2b$12$uvSGutGx4TYF/704Hk6cE.1D75ccHdnaLGnH8sF5fPaOUDRUSxKVK', 'Employee'),
+(3, 'Luis Medina', '4491000003', 'luis.medina@carweb.test',
+ '$2b$12$oeqw6nNdlnJzzvsRhy1PdOsosgJB8ZS6MH5wyBHR.U2eNlhhHF7sW', 'Employee');
 
 -- ---------------------------------------------------------------------
 -- Cars: 8 cars in different states
@@ -80,13 +78,13 @@ INSERT INTO stock_movements (movement_id, car_id, spare_part_id, manager_id, mov
 INSERT INTO appointments (appointment_id, client_name, client_phone, client_email, manage_token_hash,
                           employee_id, car_id, decision_by, appointment_type, appointment_datetime, status, cancel_reason) VALUES
 (1, 'Laura Rios',   '4492001001', 'laura.rios@example.com',   SHA2('seed-token-appointment-1', 256),
- 1, 1, 1, 'Viewing',         '2026-10-05 10:00:00', 'Completed', NULL),
+ 2, 1, 2, 'Viewing',         '2026-10-05 10:00:00', 'Completed', NULL),
 (2, 'Laura Rios',   '4492001001', 'laura.rios@example.com',   SHA2('seed-token-appointment-2', 256),
- 1, 5, 1, 'Purchase',        '2026-10-08 11:00:00', 'Completed', NULL),
+ 2, 5, 2, 'Purchase',        '2026-10-08 11:00:00', 'Completed', NULL),
 (3, 'Carlos Vega',  '4492002002', 'carlos.vega@example.com',  SHA2('seed-token-appointment-3', 256),
- 2, 2, 2, 'Test drive',      '2026-10-12 16:00:00', 'Completed', NULL),
+ 3, 2, 3, 'Test drive',      '2026-10-12 16:00:00', 'Completed', NULL),
 (4, 'Sofia Mendez', '4492003003', 'sofia.mendez@example.com', SHA2('seed-token-appointment-4', 256),
- 2, NULL, 2, 'Sale evaluation', '2026-10-14 09:30:00', 'Completed', NULL),  -- her car was not registered yet
+ 3, NULL, 3, 'Sale evaluation', '2026-10-14 09:30:00', 'Completed', NULL),  -- her car was not registered yet
 (5, 'Carlos Vega',  '4492002002', 'carlos.vega@example.com',  SHA2('seed-token-appointment-5', 256),
  NULL, 3, NULL, 'Viewing',   '2026-11-20 12:00:00', 'Pending', NULL);
 
@@ -95,7 +93,7 @@ INSERT INTO appointments (appointment_id, client_name, client_phone, client_emai
 -- ---------------------------------------------------------------------
 INSERT INTO test_drives (test_drive_id, appointment_id, employee_id, car_id, schedule_start, schedule_end,
                          start_time, end_time, observations) VALUES
-(1, 3, 2, 2, '2026-10-12 16:00:00', '2026-10-12 16:45:00',
+(1, 3, 3, 2, '2026-10-12 16:00:00', '2026-10-12 16:45:00',
  '2026-10-12 16:05:00', '2026-10-12 16:40:00', 'Smooth drive. Customer asked about the timing belt.');
 
 -- ---------------------------------------------------------------------
@@ -116,10 +114,10 @@ INSERT INTO inspections (inspection_id, car_id, inspection_date, mechanical_cond
 INSERT INTO trades (trade_id, appointment_id, employee_id, manager_id, car_id, spare_part_id, trade_type, status,
                     price, estimated_price, listing_price, trade_date, last_price_edit, reserved_until, is_active) VALUES
 -- Laura buys car 5 from the agency.
-(1, 2, 1, 1, 5, NULL, 'Purchase', 'Completed', 145000.00, 150000.00, 150000.00,
+(1, 2, 2, 1, 5, NULL, 'Purchase', 'Completed', 145000.00, 150000.00, 150000.00,
  '2026-10-08 11:30:00', '2026-10-09 10:00:00', NULL, FALSE),
 -- Sofia sells car 7 to the agency.
-(2, 4, 2, 1, 7, NULL, 'Sale',     'Completed', 180000.00, 185000.00, NULL,
+(2, 4, 3, 1, 7, NULL, 'Sale',     'Completed', 180000.00, 185000.00, NULL,
  '2026-10-14 10:30:00', NULL, NULL, FALSE);
 
 -- Documents

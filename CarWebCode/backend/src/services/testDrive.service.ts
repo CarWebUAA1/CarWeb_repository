@@ -9,7 +9,7 @@ import type { ScheduleFailure, TestDriveRepository } from "../repositories/testD
 
 const FAILURES: Record<ScheduleFailure, () => Error> = {
   "car-not-found": () => new NotFoundError("Car not found"),
-  "employee-not-found": () => new NotFoundError("Employee not found"),
+  "staff-not-found": () => new NotFoundError("Staff member not found"),
   "appointment-not-found": () => new NotFoundError("Appointment not found"),
   "not-a-test-drive-appointment": () => new ConflictError("The appointment is not a test drive appointment"),
   "appointment-already-has-test-drive": () => new ConflictError("The appointment already has a test drive"),

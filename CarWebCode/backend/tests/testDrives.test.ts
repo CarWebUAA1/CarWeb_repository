@@ -2,7 +2,11 @@ import { Router } from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { TestDriveController } from "../src/controllers/testDrive.controller.js";
-import type { ScheduleTestDriveDto } from "../src/dtos/testDrives/TestDriveDto.js";
+import type {
+  PendingTestDriveAppointmentDto,
+  ScheduleTestDriveDto,
+  UpcomingTestDriveDto,
+} from "../src/dtos/testDrives/TestDriveDto.js";
 import type { ScheduleResult, TestDriveRepository } from "../src/repositories/testDrive.repository.js";
 import { createTestDriveRouter } from "../src/routes/testDrive.routes.js";
 import { Server } from "../src/server.js";
@@ -15,6 +19,20 @@ class FakeTestDriveRepository implements TestDriveRepository {
   ];
   inputs: ScheduleTestDriveDto[] = [];
   forced: ScheduleResult | null = null;
+  pending: PendingTestDriveAppointmentDto[] = [
+    { appointmentId: 9, clientName: "Carlos Vega", appointmentDatetime: "2026-11-20 17:00:00", carId: 2, car: "Honda Civic 2019" },
+  ];
+  upcoming: UpcomingTestDriveDto[] = [
+    { id: 1, scheduleStart: "2026-11-20 16:00:00", scheduleEnd: "2026-11-20 16:45:00", carId: 2, car: "Honda Civic 2019", clientName: "Laura Rios", employeeName: "Luis Medina" },
+  ];
+
+  async listPendingAppointments() {
+    return this.pending;
+  }
+
+  async listUpcoming() {
+    return this.upcoming;
+  }
 
   async scheduleIfFree(input: ScheduleTestDriveDto): Promise<ScheduleResult> {
     this.inputs.push(input);
@@ -102,7 +120,7 @@ describe("POST /api/v1/test-drives", () => {
 
   it.each([
     ["car-not-found", 404, "Car not found"],
-    ["employee-not-found", 404, "Employee not found"],
+    ["staff-not-found", 404, "Staff member not found"],
     ["appointment-not-found", 404, "Appointment not found"],
     ["not-a-test-drive-appointment", 409, "The appointment is not a test drive appointment"],
     ["appointment-already-has-test-drive", 409, "The appointment already has a test drive"],
@@ -111,5 +129,29 @@ describe("POST /api/v1/test-drives", () => {
     const res = await request(app).post("/api/v1/test-drives").send(valid);
     expect(res.status).toBe(status);
     expect(res.body.error).toBe(message);
+  });
+});
+
+describe("GET /api/v1/test-drives", () => {
+  let repo: FakeTestDriveRepository;
+  let app: Server["server"];
+
+  beforeEach(() => {
+    repo = new FakeTestDriveRepository();
+    const routes = Router();
+    routes.use("/test-drives", createTestDriveRouter(new TestDriveController(new TestDriveService(repo))));
+    app = new Server({ port: 0, routes }).server;
+  });
+
+  it("lists the upcoming test drives", async () => {
+    const res = await request(app).get("/api/v1/test-drives");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(repo.upcoming);
+  });
+
+  it("lists the test drive appointments still to schedule", async () => {
+    const res = await request(app).get("/api/v1/test-drives/pending-appointments");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(repo.pending);
   });
 });

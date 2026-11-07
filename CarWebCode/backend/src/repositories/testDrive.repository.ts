@@ -8,7 +8,7 @@ import type {
 
 export type ScheduleFailure =
   | "car-not-found"
-  | "employee-not-found"
+  | "staff-not-found"
   | "appointment-not-found"
   | "not-a-test-drive-appointment"
   | "appointment-already-has-test-drive";
@@ -112,7 +112,7 @@ export class MySqlTestDriveRepository implements TestDriveRepository {
          FROM test_drives td
          JOIN cars c         ON c.car_id = td.car_id
          JOIN appointments a ON a.appointment_id = td.appointment_id
-         JOIN employees e    ON e.employee_id = td.employee_id
+         JOIN staff e        ON e.staff_id = td.employee_id
         WHERE td.schedule_end >= NOW()
         ORDER BY td.schedule_start`,
     );
@@ -135,10 +135,11 @@ export class MySqlTestDriveRepository implements TestDriveRepository {
     ]);
     if (cars.length === 0) return { ok: false, reason: "car-not-found" };
 
-    const [employees] = await conn.query<RowDataPacket[]>("SELECT employee_id FROM employees WHERE employee_id = ?", [
+    // Any staff member can accompany a test drive: managers can do every employee task.
+    const [staff] = await conn.query<RowDataPacket[]>("SELECT staff_id FROM staff WHERE staff_id = ?", [
       input.employeeId,
     ]);
-    if (employees.length === 0) return { ok: false, reason: "employee-not-found" };
+    if (staff.length === 0) return { ok: false, reason: "staff-not-found" };
 
     const [appointments] = await conn.query<AppointmentRow[]>(
       "SELECT appointment_type FROM appointments WHERE appointment_id = ?",

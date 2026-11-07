@@ -20,6 +20,6 @@ SELECT
 FROM trades t
 JOIN appointments a   ON a.appointment_id = t.appointment_id
 LEFT JOIN cars c      ON c.car_id = t.car_id
-JOIN employees e      ON e.employee_id = t.employee_id
-LEFT JOIN managers m  ON m.manager_id = t.manager_id
+JOIN staff e          ON e.staff_id = t.employee_id
+LEFT JOIN staff m     ON m.staff_id = t.manager_id
 ORDER BY t.trade_date;

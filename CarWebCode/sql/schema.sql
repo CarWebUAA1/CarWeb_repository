@@ -22,44 +22,29 @@ USE carweb;
 
 
 -- ---------------------------------------------------------------------
--- employees: staff users. Same access fields as managers.
+-- staff: every user of the system (customers have no account).
+-- A Manager can do everything an Employee does, plus the manager-only
+-- tasks (approve or reject trades, record stock movements).
 -- ---------------------------------------------------------------------
-CREATE TABLE employees (
-  employee_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE staff (
+  staff_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name             VARCHAR(100) NOT NULL,
   phone            VARCHAR(15)  NOT NULL,
-  email            VARCHAR(255) NOT NULL,
+  email            VARCHAR(255) NOT NULL,              -- unique across all staff
   password_hash    VARCHAR(255) NOT NULL,              -- bcrypt hash, never the password
+  role             ENUM('Employee','Manager') NOT NULL DEFAULT 'Employee',
   failed_attempts  TINYINT UNSIGNED NOT NULL DEFAULT 0, -- login lockout: 3 attempts
   locked_until     DATETIME NULL,                      -- ...then locked for 15 minutes
   last_activity    DATETIME NULL,                      -- session expires by inactivity
   created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT pk_employees PRIMARY KEY (employee_id),
-  CONSTRAINT uq_employees_email UNIQUE (email)
+  CONSTRAINT pk_staff PRIMARY KEY (staff_id),
+  CONSTRAINT uq_staff_email UNIQUE (email),
+  -- Target of the composite foreign keys (manager_id, manager_role) of the
+  -- manager-only columns: they can only point to a row whose role is 'Manager'.
+  CONSTRAINT uq_staff_staff_id_role UNIQUE (staff_id, role)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
-  COMMENT = 'Employees with system access';
-
-
--- ---------------------------------------------------------------------
--- managers: same access fields as employees; they approve trades and
--- record stock movements.
--- ---------------------------------------------------------------------
-CREATE TABLE managers (
-  manager_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  name             VARCHAR(100) NOT NULL,
-  phone            VARCHAR(15)  NOT NULL,
-  email            VARCHAR(255) NOT NULL,
-  password_hash    VARCHAR(255) NOT NULL,              -- bcrypt hash, never the password
-  failed_attempts  TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  locked_until     DATETIME NULL,
-  last_activity    DATETIME NULL,
-  created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT pk_managers PRIMARY KEY (manager_id),
-  CONSTRAINT uq_managers_email UNIQUE (email)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
-  COMMENT = 'Managers with system access';
+  COMMENT = 'Employees and managers with system access';
 
 
 -- ---------------------------------------------------------------------
@@ -137,7 +122,8 @@ CREATE TABLE stock_movements (
   movement_id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   car_id         INT UNSIGNED NULL,
   spare_part_id  INT UNSIGNED NULL,
-  manager_id     INT UNSIGNED NOT NULL,                 -- who recorded it
+  manager_id     INT UNSIGNED NOT NULL,                 -- who recorded it (must be a manager)
+  manager_role   ENUM('Employee','Manager') NOT NULL DEFAULT 'Manager', -- fixed; see fk_stock_movements_manager
   movement_type  ENUM('In','Out') NOT NULL,
   reason         ENUM('Purchase','Sale','Transfer','Return','Spare parts') NOT NULL,
   movement_date  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -150,11 +136,13 @@ CREATE TABLE stock_movements (
     ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT fk_stock_movements_spare_part FOREIGN KEY (spare_part_id) REFERENCES spare_parts (part_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT fk_stock_movements_manager FOREIGN KEY (manager_id) REFERENCES managers (manager_id)
+  CONSTRAINT chk_stock_movements_manager_role CHECK (manager_role = 'Manager'),
+  -- Composite key: the referenced staff row must have role 'Manager'.
+  CONSTRAINT fk_stock_movements_manager FOREIGN KEY (manager_id, manager_role) REFERENCES staff (staff_id, role)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
   INDEX idx_stock_movements_car_id (car_id),
   INDEX idx_stock_movements_spare_part_id (spare_part_id),
-  INDEX idx_stock_movements_manager_id (manager_id),
+  INDEX idx_stock_movements_manager_id_role (manager_id, manager_role),
   INDEX idx_stock_movements_movement_date (movement_date)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
   COMMENT = 'Append-only log of stock in/out';
@@ -172,9 +160,9 @@ CREATE TABLE appointments (
   -- SHA-256 (64 hex chars) of the token in the "modify or cancel" link.
   -- The original token is never stored.
   manage_token_hash    CHAR(64)     NOT NULL,
-  employee_id          INT UNSIGNED NULL,               -- "is assigned to", set when confirmed
+  employee_id          INT UNSIGNED NULL,               -- staff "is assigned to", set when confirmed
   car_id               INT UNSIGNED NULL,               -- "subject"; a sale evaluation may have no car yet
-  decision_by          INT UNSIGNED NULL,               -- employee who confirmed or rejected
+  decision_by          INT UNSIGNED NULL,               -- staff member who confirmed or rejected
   appointment_type     ENUM('Viewing','Test drive','Purchase','Sale evaluation') NOT NULL,
   appointment_datetime DATETIME NOT NULL,
   status               ENUM('Pending','Confirmed','Rejected','Cancelled','Completed','No show')
@@ -186,11 +174,12 @@ CREATE TABLE appointments (
   CONSTRAINT uq_appointments_manage_token_hash UNIQUE (manage_token_hash),
   -- The same email cannot book two appointments at the same time.
   CONSTRAINT uq_appointments_client_email_datetime UNIQUE (client_email, appointment_datetime),
-  CONSTRAINT fk_appointments_employee FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+  -- Employee tasks: any staff member (employees and managers).
+  CONSTRAINT fk_appointments_employee FOREIGN KEY (employee_id) REFERENCES staff (staff_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT fk_appointments_car FOREIGN KEY (car_id) REFERENCES cars (car_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT fk_appointments_decision_by FOREIGN KEY (decision_by) REFERENCES employees (employee_id)
+  CONSTRAINT fk_appointments_decision_by FOREIGN KEY (decision_by) REFERENCES staff (staff_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
   INDEX idx_appointments_employee_id (employee_id),
   INDEX idx_appointments_car_id (car_id),
@@ -211,7 +200,7 @@ CREATE TABLE appointments (
 CREATE TABLE test_drives (
   test_drive_id   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   appointment_id  INT UNSIGNED NOT NULL,
-  employee_id     INT UNSIGNED NOT NULL,                -- "accompanies"
+  employee_id     INT UNSIGNED NOT NULL,                -- staff member who "accompanies"
   car_id          INT UNSIGNED NOT NULL,                -- "is driven in"
   schedule_start  DATETIME NOT NULL,
   schedule_end    DATETIME NOT NULL,
@@ -227,7 +216,7 @@ CREATE TABLE test_drives (
   CONSTRAINT chk_test_drives_actual_times CHECK (start_time IS NULL OR end_time IS NULL OR end_time >= start_time),
   CONSTRAINT fk_test_drives_appointment FOREIGN KEY (appointment_id) REFERENCES appointments (appointment_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT fk_test_drives_employee FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+  CONSTRAINT fk_test_drives_employee FOREIGN KEY (employee_id) REFERENCES staff (staff_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT fk_test_drives_car FOREIGN KEY (car_id) REFERENCES cars (car_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -272,8 +261,9 @@ CREATE TABLE inspections (
 CREATE TABLE trades (
   trade_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   appointment_id   INT UNSIGNED NOT NULL,
-  employee_id      INT UNSIGNED NOT NULL,               -- "is responsible for"
-  manager_id       INT UNSIGNED NULL,                   -- "approves or rejects", set on decision
+  employee_id      INT UNSIGNED NOT NULL,               -- staff member who "is responsible for"
+  manager_id       INT UNSIGNED NULL,                   -- "approves or rejects", set on decision (must be a manager)
+  manager_role     ENUM('Employee','Manager') NOT NULL DEFAULT 'Manager', -- fixed; see fk_trades_manager
   car_id           INT UNSIGNED NULL,                   -- "is traded in"
   spare_part_id    INT UNSIGNED NULL,                   -- "is sold in"
   trade_type       ENUM('Purchase','Sale') NOT NULL,
@@ -308,9 +298,12 @@ CREATE TABLE trades (
   ),
   CONSTRAINT fk_trades_appointment FOREIGN KEY (appointment_id) REFERENCES appointments (appointment_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT fk_trades_employee FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+  CONSTRAINT chk_trades_manager_role CHECK (manager_role = 'Manager'),
+  CONSTRAINT fk_trades_employee FOREIGN KEY (employee_id) REFERENCES staff (staff_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT fk_trades_manager FOREIGN KEY (manager_id) REFERENCES managers (manager_id)
+  -- Composite key: the approver must be a staff row with role 'Manager'.
+  -- While manager_id is NULL (no decision yet) the key is not checked.
+  CONSTRAINT fk_trades_manager FOREIGN KEY (manager_id, manager_role) REFERENCES staff (staff_id, role)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT fk_trades_car FOREIGN KEY (car_id) REFERENCES cars (car_id)
     ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -318,7 +311,7 @@ CREATE TABLE trades (
     ON DELETE RESTRICT ON UPDATE RESTRICT,
   INDEX idx_trades_appointment_id (appointment_id),
   INDEX idx_trades_employee_id (employee_id),
-  INDEX idx_trades_manager_id (manager_id),
+  INDEX idx_trades_manager_id_role (manager_id, manager_role),
   INDEX idx_trades_car_id (car_id),
   INDEX idx_trades_spare_part_id (spare_part_id),
   INDEX idx_trades_status (status),
