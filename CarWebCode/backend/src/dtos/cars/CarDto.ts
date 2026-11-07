@@ -28,8 +28,8 @@ export interface CarDetailDto {
   fuelType: string | null;
   transmission: string | null;
   color: string;
-  tireCondition: string;
-  price: number;
+  tireCondition: string | null;
+  price: number | null; // cars.sale_price is nullable (e.g. a car pending evaluation)
   status: string;
   isAvailable: boolean;
   photos: CarPhotoDto[];

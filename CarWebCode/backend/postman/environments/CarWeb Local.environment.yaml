@@ -4,19 +4,3 @@ values:
     value: 'http://localhost:3000'
     enabled: true
     type: default
-  - key: userName
-    value: 'John Smith'
-    enabled: true
-    type: default
-  - key: userEmail
-    value: 'john@example.com'
-    enabled: true
-    type: default
-  - key: userPassword
-    value: 'password123'
-    enabled: true
-    type: default
-  - key: userPhone
-    value: '6621234567'
-    enabled: true
-    type: default

@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { buildCatalogCondition, escapeLike } from "../src/repositories/carFilters.js";
 
-const BASE = "c.StatusOfCar = ? AND c.InventoryStatus = TRUE";
+const BASE = "c.status = ? AND c.inventory_status = 'In stock' AND c.sale_price IS NOT NULL";
 
 describe("buildCatalogCondition", () => {
-  it("only lists available cars when there are no filters", () => {
+  it("only lists available cars in stock with a price when there are no filters", () => {
     expect(buildCatalogCondition({})).toEqual({ where: BASE, params: ["Available"] });
   });
 
   it("filters by exact brand and model", () => {
     expect(buildCatalogCondition({ brand: "Toyota", model: "Corolla" })).toEqual({
-      where: `${BASE} AND c.Brand = ? AND c.Model = ?`,
+      where: `${BASE} AND c.brand = ? AND c.model = ?`,
       params: ["Available", "Toyota", "Corolla"],
     });
   });
 
   it("requires every search word to appear in the brand or the model", () => {
     expect(buildCatalogCondition({ search: "toyota  corolla" })).toEqual({
-      where: `${BASE} AND (c.Brand LIKE ? OR c.Model LIKE ?) AND (c.Brand LIKE ? OR c.Model LIKE ?)`,
+      where: `${BASE} AND (c.brand LIKE ? OR c.model LIKE ?) AND (c.brand LIKE ? OR c.model LIKE ?)`,
       params: ["Available", "%toyota%", "%toyota%", "%corolla%", "%corolla%"],
     });
   });

@@ -21,27 +21,31 @@ export function escapeLike(value: string): string {
 }
 
 /**
- * Builds the WHERE clause of the public catalog: only available cars in inventory,
- * plus the optional filters.
+ * Builds the WHERE clause of the public catalog: only available cars in stock that have
+ * a sale price (sale_price is nullable in the schema), plus the optional filters.
  *
- * Case and accents are ignored by the column collation (utf8mb4_0900_ai_ci in MySQL 8,
- * utf8mb4_unicode_ci in MariaDB), so "MÁZDA" matches "Mazda".
+ * Case and accents are ignored by the column collation (utf8mb4_0900_ai_ci, see sql/schema.sql),
+ * so "MÁZDA" matches "Mazda".
  */
 export function buildCatalogCondition(filters: CarFilters, alias = "c"): SqlCondition {
-  const conditions = [`${alias}.StatusOfCar = ?`, `${alias}.InventoryStatus = TRUE`];
+  const conditions = [
+    `${alias}.status = ?`,
+    `${alias}.inventory_status = 'In stock'`,
+    `${alias}.sale_price IS NOT NULL`,
+  ];
   const params: unknown[] = [CAR_STATUS.AVAILABLE];
 
   if (filters.brand) {
-    conditions.push(`${alias}.Brand = ?`);
+    conditions.push(`${alias}.brand = ?`);
     params.push(filters.brand);
   }
   if (filters.model) {
-    conditions.push(`${alias}.Model = ?`);
+    conditions.push(`${alias}.model = ?`);
     params.push(filters.model);
   }
   for (const word of (filters.search ?? "").split(/\s+/).filter(Boolean)) {
     const pattern = `%${escapeLike(word)}%`;
-    conditions.push(`(${alias}.Brand LIKE ? OR ${alias}.Model LIKE ?)`);
+    conditions.push(`(${alias}.brand LIKE ? OR ${alias}.model LIKE ?)`);
     params.push(pattern, pattern);
   }
 
