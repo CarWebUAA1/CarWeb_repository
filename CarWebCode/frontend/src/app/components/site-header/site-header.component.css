@@ -48,6 +48,17 @@
   border-color: var(--color-primary-hover);
 }
 
+/* Icon-only button (employee access): square, same height as the text buttons. */
+.site-header__btn--icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  padding-inline: 0;
+  box-sizing: border-box;
+  font-size: 1.1rem;
+}
+
 .site-header__btn--secondary {
   background: var(--color-surface);
   color: var(--color-primary);

@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
@@ -20,6 +20,7 @@ describe('LoginComponent', () => {
   }
 
   beforeEach(async () => {
+    sessionStorage.clear();
     TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
@@ -34,6 +35,7 @@ describe('LoginComponent', () => {
   afterEach(() => http.verify());
 
   it('sends the credentials to the login endpoint and shows success', async () => {
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await login(' john@example.com ', 'secret123');
     const req = http.expectOne('/api/v1/users/login');
     expect(req.request.method).toBe('POST');
@@ -41,6 +43,19 @@ describe('LoginComponent', () => {
     req.flush({ ok: true, message: 'Login successful.', user: { id: 1, name: 'John', email: 'john@example.com', role: 'client' } });
     fixture.detectChanges();
     expect(el.querySelector('.message.success')?.textContent).toContain('Login successful.');
+  });
+
+  it.each([
+    ['employee', '/employee'],
+    ['manager', '/employee'],
+    ['client', '/'],
+  ])('sends a %s to %s after logging in', async (role, target) => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await login('john@example.com', 'secret123');
+    http
+      .expectOne('/api/v1/users/login')
+      .flush({ ok: true, message: 'Login successful.', user: { id: 1, name: 'John', email: 'john@example.com', role } });
+    expect(navigate).toHaveBeenCalledWith([target]);
   });
 
   it('shows the generic error for wrong credentials', async () => {

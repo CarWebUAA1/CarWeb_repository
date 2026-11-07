@@ -831,3 +831,79 @@ La prueba en un navegador real mostró que al buscar, la URL quedaba `/cars?sear
 **Verificación:** `ng build` sin errores ni el aviso `NG8113`; `ng test` → 29 pruebas pasan. Con esto se cierra el pendiente de la entrada anterior.
 
 ---
+
+## 2026-11-03 — Página de empleado
+
+### Términos
+
+- **Página de usuario:** la que ya existía (home, catálogo, detalle) para clientes y visitantes.
+- **Página de empleado:** la nueva, exclusiva para empleados (`/employee`).
+
+### Flujo
+
+```
+Página de usuario ──[botón fa-user-tie]──► /login ──(rol employee o manager)──► /employee (home de empleados)
+                                                   └─(rol client)───────────────► /  (página de usuario)
+```
+
+### Qué se hizo
+
+| Archivo | Cambio | Por qué |
+|---|---|---|
+| `frontend/package.json` + `angular.json` | Se instaló **`@fortawesome/fontawesome-free` 6**. En `styles` solo se cargan `fontawesome.min.css` y `solid.min.css` (≈57 KB de CSS y una fuente de ≈156 KB) | El ícono pedido es `fa-solid fa-user-tie`, del estilo *solid*. No se carga el paquete completo (`all.min.css`), que trae estilos que no se usan |
+| `components/site-header/site-header.component.{html,css,ts}` | Se **quitó el botón *Log in*** y en su lugar va un **botón cuadrado rojo con `<i class="fa-solid fa-user-tie">`** que lleva a `/login` | Pedido del usuario. Como el botón solo tiene ícono, lleva `title="Employee access"` (tooltip) y un texto oculto para lectores de pantalla; el ícono va con `aria-hidden="true"`. Sin eso, un lector de pantalla no anunciaría nada útil |
+| `services/auth.service.ts` (nuevo) | Guarda al usuario que inició sesión (`user`, `isEmployee`), con `login()` y `logout()`. Lo guarda en **`sessionStorage`** (clave `carweb.user`), así se mantiene al recargar la página y se borra al cerrar la pestaña | Hace falta para saber quién entró y si es empleado. Funciona con SSR: en el servidor no toca `sessionStorage` |
+| `services/auth.service.ts` → `EMPLOYEE_ROLES` | Roles con acceso a la página de empleado: **`employee`** y **`manager`** (sin importar mayúsculas) | `Security.md` define los roles Customer, Employee y Manager. En la base solo existía `client` (el predeterminado), así que se usaron los nombres en minúscula, igual que `client` |
+| `guards/employee.guard.ts` (nuevo) | `employeeGuard`: deja pasar a empleados y gerentes; a cualquier otro lo manda a `/login` | Que nadie llegue a la página de empleado escribiendo la URL o con sesión de cliente |
+| `pages/login/login.component.ts` | Usa `AuthService`. Después de entrar redirige según el rol: empleado o gerente → **`/employee`**, cliente → **`/`** | Pedido: del login se pasa a la home de empleados. Los clientes vuelven a la página de usuario para no romper su flujo (el registro lleva a "Log in") |
+| `pages/employee-home/` (nuevo) | Home de empleados con encabezado propio (logo, etiqueta **"Employee portal"**, nombre del empleado, **Log out**), "Welcome, \<nombre\>" y **7 tarjetas placeholder** con las historias de empleados (*Appointments, Test drives, Vehicle inspection, Register a purchase, Register a sale, Documents, Contracts*), cada una con su ícono de Font Awesome y "Coming soon". Usa el mismo footer | Base para las historias de `Documentation/UserStories/Employee`. Un encabezado distinto (borde rojo y etiqueta oscura) deja claro que es la página de empleado. *Log out* borra la sesión y vuelve al login |
+| `app.routes.ts` | Ruta `employee` con `canActivate: [employeeGuard]` | — |
+| `app.routes.server.ts` | `employee` con `RenderMode.Client` | La sesión vive en el navegador. Si se prerenderizara en el servidor, el guard vería siempre "sin sesión" y redirigiría |
+| `guards/.gitkeep` | Eliminado | La carpeta ya tiene contenido |
+
+### Pruebas nuevas (19)
+
+- `auth.service.spec.ts`: guarda al usuario tras el login, lo recupera al recargar, lo borra con logout; `isEmployeeRole` para employee/Manager/client/undefined.
+- `employee.guard.spec.ts`: deja pasar a employee y manager; manda a `/login` si no hay sesión o si es cliente.
+- `employee-home.component.spec.ts`: saludo con el nombre, 7 tareas "Coming soon", logout borra la sesión y navega a `/login`.
+- `login.component.spec.ts`: employee → `/employee`, manager → `/employee`, client → `/`.
+- `site-header.component.spec.ts`: el botón de empleado tiene el ícono `fa-user-tie` y lleva a `/login`; ya no existe el botón "Log in".
+
+### Verificación
+
+- `ng build` sin errores; `ng test` → **12 archivos, 48 pruebas**.
+- Navegador real (Edge + puppeteer) contra MySQL, con un empleado y un cliente de prueba (borrados al terminar):
+  1. El header de la página de usuario muestra *Catalog* y el botón del ícono; ya no tiene *Log in*. El ícono carga con la fuente "Font Awesome 6 Free".
+  2. Entrar a `/employee` sin sesión → `/login`.
+  3. Botón de empleado → `/login` → login de empleado → `/employee` ("Welcome, Ana Test").
+  4. F5 en `/employee` → sigue en `/employee`.
+  5. *Log out* → `/login`; volver a `/employee` → `/login`.
+  6. Login de cliente → `/`; el cliente intenta `/employee` → `/login`.
+
+### Cómo dar acceso a un empleado
+
+Todavía no hay pantalla para administrar empleados. Por ahora: registrar la cuenta normalmente (`/register`) y luego cambiarle el rol en la base:
+
+```sql
+UPDATE User SET role = 'employee' WHERE Email = 'correo@del-empleado.com';
+-- o 'manager' para el gerente
+```
+
+### Avisos
+
+- **La protección es solo del lado del navegador.** El backend todavía no emite sesión ni token, así que el guard decide qué páginas se muestran, pero **no protege la API**. Cuando la página de empleado consuma endpoints de empleados, el backend tendrá que validar el rol (JWT o sesión), como pide `Security.md`.
+- El **menú de acceso rápido** (☰) todavía tiene el enlace *Log in*, igual que el pie del registro ("Already have an account? Log in"). Se dejaron para que los clientes puedan iniciar sesión; si el login debe ser solo para empleados, hay que quitarlos.
+
+---
+
+## 2026-11-03 — El botón de empleado enlaza a la home de empleados
+
+| Archivo | Cambio | Por qué |
+|---|---|---|
+| `frontend/.../components/site-header/site-header.component.html` | El botón `fa-user-tie` ahora apunta a **`/employee`** (antes `/login`) | Pedido del usuario. El `employeeGuard` resuelve los dos casos: **sin sesión de empleado** → lo manda a `/login` y, al entrar, el login lo lleva a `/employee` (mismo flujo que antes); **con sesión de empleado** → entra directo a la home de empleados, sin volver a pasar por el login |
+| `frontend/.../components/site-header/site-header.component.spec.ts` | La prueba verifica `href="/employee"` | Acompaña el cambio |
+
+**Verificación:** `ng build` sin errores; `ng test` → 48 pruebas. Navegador real con un empleado de prueba (borrado al terminar): botón sin sesión → `/login` → login → `/employee`; desde el catálogo, con la sesión iniciada, el botón → `/employee` ("Welcome, Ana Test").
+
+---
+

@@ -11,6 +11,11 @@ export const serverRoutes: ServerRoute[] = [
     path: 'cars/:id',
     renderMode: RenderMode.Client
   },
+  // Depends on the session saved in the browser, which the server cannot see.
+  {
+    path: 'employee',
+    renderMode: RenderMode.Client
+  },
   {
     path: '**',
     renderMode: RenderMode.Prerender

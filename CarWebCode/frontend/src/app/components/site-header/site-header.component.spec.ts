@@ -13,13 +13,25 @@ describe('SiteHeaderComponent', () => {
     el = fixture.nativeElement;
   });
 
-  it('shows logo, search bar, Catalog, Log in and quick access in that order', () => {
+  it('shows logo, search bar, Catalog, employee access and quick access in that order', () => {
     const order = Array.from(el.querySelector('header')!.children).map(
       (child) => child.getAttribute('aria-label') ?? child.tagName.toLowerCase(),
     );
     expect(order).toEqual(['CarWeb home', 'app-search-bar', 'Main', 'app-quick-access-sidebar']);
     const buttons = Array.from(el.querySelectorAll('.site-header__nav a')).map((a) => a.textContent?.trim());
-    expect(buttons).toEqual(['Catalog', 'Log in']);
+    expect(buttons).toEqual(['Catalog', 'Employee access']);
+  });
+
+  it('has an employee access button with the user-tie icon that opens the employee home', () => {
+    const employee = el.querySelector<HTMLAnchorElement>('.site-header__btn--icon')!;
+    expect(employee.getAttribute('href')).toBe('/employee');
+    expect(employee.querySelector('i.fa-solid.fa-user-tie')).not.toBeNull();
+    expect(employee.querySelector('i')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('no longer has a Log in button', () => {
+    const texts = Array.from(el.querySelectorAll('a')).map((a) => a.textContent?.trim());
+    expect(texts).not.toContain('Log in');
   });
 
   it('opens the catalog with the search term', () => {

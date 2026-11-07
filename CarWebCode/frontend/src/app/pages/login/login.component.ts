@@ -1,9 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { UserService } from '../../services/user.service';
+import { AuthService, isEmployeeRole } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -12,7 +12,8 @@ import { UserService } from '../../services/user.service';
   styleUrl: '../auth-form.css',
 })
 export class LoginComponent {
-  private readonly userService = inject(UserService);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
   email = '';
   password = '';
@@ -28,7 +29,7 @@ export class LoginComponent {
     this.isSuccess.set(false);
     this.isLoading.set(true);
 
-    this.userService
+    this.auth
       .login({ email: this.email.trim(), password: this.password })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
@@ -36,6 +37,8 @@ export class LoginComponent {
           this.isSuccess.set(true);
           this.message.set(response.message || 'Login successful.');
           this.password = '';
+          // Employees and managers go to the employee page; customers back to the user page.
+          this.router.navigate([isEmployeeRole(response.user?.role) ? '/employee' : '/']);
         },
         error: (error: unknown) => this.message.set(errorText(error)),
       });

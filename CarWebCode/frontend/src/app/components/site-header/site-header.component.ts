@@ -3,7 +3,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { QuickAccessSidebarComponent } from '../quick-access-sidebar/quick-access-sidebar.component';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 
-/** Top bar: logo, search bar, Catalog and Log in buttons, and the quick access sidebar. */
+/** Top bar: logo, search bar, Catalog and employee access buttons, and the quick access sidebar. */
 @Component({
   selector: 'app-site-header',
   imports: [RouterLink, RouterLinkActive, SearchBarComponent, QuickAccessSidebarComponent],

@@ -1,0 +1,32 @@
+<header class="employee-header">
+  <a class="employee-header__brand" routerLink="/employee" aria-label="Employee home">
+    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+  </a>
+  <span class="employee-header__badge">
+    <i class="fa-solid fa-user-tie" aria-hidden="true"></i> Employee portal
+  </span>
+  <div class="employee-header__user">
+    <span class="employee-header__name">{{ auth.user()?.name }}</span>
+    <button type="button" class="employee-header__logout" (click)="logout()">
+      <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Log out
+    </button>
+  </div>
+</header>
+
+<main class="employee-home">
+  <h1>Welcome, {{ auth.user()?.name }}</h1>
+  <p class="employee-home__intro">Choose a task to get started.</p>
+
+  <ul class="tasks">
+    @for (task of tasks; track task.title) {
+      <li class="task">
+        <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
+        <h2 class="task__title">{{ task.title }}</h2>
+        <p class="task__description">{{ task.description }}</p>
+        <span class="task__badge">Coming soon</span>
+      </li>
+    }
+  </ul>
+</main>
+
+<app-site-footer />

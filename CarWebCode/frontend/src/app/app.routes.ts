@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { employeeGuard } from './guards/employee.guard';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,12 @@ export const routes: Routes = [
     path: 'login',
     title: 'Log in | CarWeb',
     loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'employee',
+    title: 'Employee portal | CarWeb',
+    canActivate: [employeeGuard],
+    loadComponent: () => import('./pages/employee-home/employee-home.component'),
   },
   { path: '**', redirectTo: '' },
 ];

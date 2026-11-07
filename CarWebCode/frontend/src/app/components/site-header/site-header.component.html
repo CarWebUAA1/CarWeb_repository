@@ -13,7 +13,14 @@
     >
       Catalog
     </a>
-    <a routerLink="/login" class="site-header__btn site-header__btn--primary">Log in</a>
+    <a
+      routerLink="/employee"
+      class="site-header__btn site-header__btn--primary site-header__btn--icon"
+      title="Employee access"
+    >
+      <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+      <span class="visually-hidden">Employee access</span>
+    </a>
   </nav>
 
   <app-quick-access-sidebar />
