@@ -419,3 +419,43 @@ CREATE TRIGGER trg_stock_movements_no_delete
   BEFORE DELETE ON stock_movements FOR EACH ROW
   SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Stock movements cannot be deleted; record an opposite movement instead';
+
+
+-- ---------------------------------------------------------------------
+-- appointment_logs: what customers did with their appointments.
+-- Customers have no account (no ClientId), so they are identified by
+-- client_email, the same way appointments identifies them.
+-- log_date is filled by MySQL with its local date and time.
+-- ---------------------------------------------------------------------
+CREATE TABLE appointment_logs (
+  log_id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  log_date           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  client_email       VARCHAR(255) NOT NULL,
+  appointment_id     INT UNSIGNED NOT NULL,
+  action             ENUM('Created','Modified','Cancelled') NOT NULL,
+  previous_datetime  DATETIME NULL,
+  new_datetime       DATETIME NULL,
+  CONSTRAINT pk_appointment_logs PRIMARY KEY (log_id),
+  CONSTRAINT fk_appointment_logs_appointment FOREIGN KEY (appointment_id) REFERENCES appointments (appointment_id)
+    ON DELETE RESTRICT ON UPDATE RESTRICT,
+  INDEX idx_appointment_logs_appointment_id (appointment_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
+  COMMENT = 'Log of appointment changes made by customers';
+
+
+-- ---------------------------------------------------------------------
+-- notifications: messages for a staff member (for example, "your
+-- appointment was moved"). The employee screen can read them later.
+-- ---------------------------------------------------------------------
+CREATE TABLE notifications (
+  notification_id  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  staff_id         INT UNSIGNED NOT NULL,
+  message          VARCHAR(255) NOT NULL,
+  is_read          BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT pk_notifications PRIMARY KEY (notification_id),
+  CONSTRAINT fk_notifications_staff FOREIGN KEY (staff_id) REFERENCES staff (staff_id)
+    ON DELETE RESTRICT ON UPDATE RESTRICT,
+  INDEX idx_notifications_staff_id (staff_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
+  COMMENT = 'Notifications for employees and managers';
