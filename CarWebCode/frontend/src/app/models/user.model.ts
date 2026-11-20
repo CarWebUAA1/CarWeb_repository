@@ -29,5 +29,6 @@ export interface LoggedUser {
 export interface LoginResponse {
   ok: boolean;
   message: string;
+  token: string;
   user?: LoggedUser;
 }

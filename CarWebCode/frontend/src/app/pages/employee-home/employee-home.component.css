@@ -89,6 +89,22 @@
   box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
+.task__link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.task__action {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.75rem;
+}
+
 .task__icon {
   font-size: 1.5rem;
   color: var(--color-primary);

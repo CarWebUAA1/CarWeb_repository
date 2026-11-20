@@ -1,0 +1,75 @@
+<app-site-header />
+<main class="detail">
+  <a class="detail__back" routerLink="/spare-parts">← Back to the catalog</a>
+
+  @if (part.hasValue()) {
+    @let item = part.value();
+
+    <section class="detail__card">
+      <span class="detail__eyebrow">Spare part #{{ item.id }}</span>
+      <h1>{{ item.brand }} {{ item.model }}</h1>
+      <p class="detail__price">{{ item.price | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}</p>
+
+      <dl class="specs">
+        <dt>Brand</dt><dd>{{ item.brand }}</dd>
+        <dt>Model</dt><dd>{{ item.model }}</dd>
+        <dt>Status</dt><dd>{{ item.status }}</dd>
+        <dt>Inventory</dt><dd>{{ item.inventoryStatus }}</dd>
+        <dt>Price</dt><dd>{{ item.price | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}</dd>
+      </dl>
+
+      @if (canRecordMovement()) {
+        <button class="movement-button" type="button" (click)="toggleMovementForm()">
+          {{ showMovementForm() ? 'Cancel stock movement' : 'Record stock movement' }}
+        </button>
+
+        @if (showMovementForm()) {
+          <form class="movement-form" (submit)="$event.preventDefault(); recordMovement()">
+            <label for="movementType">Movement</label>
+            <select
+              id="movementType"
+              [value]="movementType()"
+              (change)="setMovementType($event)"
+            >
+              <option value="In">Stock in</option>
+              <option value="Out">Stock out</option>
+            </select>
+
+            <label for="movementReason">Reason</label>
+            <select
+              id="movementReason"
+              [value]="reason()"
+              (change)="setReason($event)"
+            >
+              @for (option of movementReasons; track option) {
+                <option [value]="option">{{ option }}</option>
+              }
+            </select>
+
+            <button type="submit" [disabled]="loading()">
+              {{ loading() ? 'Recording…' : 'Confirm movement' }}
+            </button>
+          </form>
+        }
+      }
+
+      @if (message()) {
+        <p
+          class="message"
+          role="status"
+          [class.message--success]="messageType() === 'success'"
+          [class.message--error]="messageType() === 'error'"
+        >
+          {{ message() }}
+        </p>
+      }
+    </section>
+  } @else if (part.error()) {
+    <div class="detail__status" role="alert">
+      <p>We couldn't load this spare part.</p>
+      <button type="button" (click)="part.reload()">Try again</button>
+    </div>
+  } @else {
+    <p class="detail__status">Loading…</p>
+  }
+</main>

@@ -1,0 +1,67 @@
+<app-site-header />
+<main class="catalog">
+  <h1>Spare parts catalog</h1>
+
+  @if (searchTerm()) {
+    <p class="catalog__search">
+      Results for “{{ searchTerm() }}”
+      <a routerLink="/spare-parts">Clear search</a>
+    </p>
+  }
+
+  @if (spareParts.isLoading()) {
+    <p class="catalog__status">Loading spare parts…</p>
+  } @else if (spareParts.error()) {
+    <div class="catalog__status" role="alert">
+      <p>We couldn't load the spare parts catalog.</p>
+      <button type="button" (click)="spareParts.reload()">Try again</button>
+    </div>
+  } @else if (spareParts.hasValue()) {
+    @let result = spareParts.value();
+
+    @if (result.total === 0 && searchTerm()) {
+      <p class="catalog__status">
+        No spare parts match your search. <a routerLink="/spare-parts">Clear search</a>
+      </p>
+    } @else if (result.total === 0) {
+      <p class="catalog__status">There are no spare parts available right now.</p>
+    } @else if (result.data.length === 0) {
+      <p class="catalog__status">
+        This page doesn't exist.
+        <a routerLink="/spare-parts" [queryParams]="{ page: null }" queryParamsHandling="merge">
+          Back to the first page
+        </a>
+      </p>
+    } @else {
+      <ul class="catalog__grid">
+        @for (part of result.data; track part.id) {
+          <li>
+            <a class="part-card" [routerLink]="['/spare-parts', part.id]">
+              <span class="part-card__eyebrow">Spare part #{{ part.id }}</span>
+              <h2>{{ part.brand }} {{ part.model }}</h2>
+              <p class="part-card__price">{{ part.price | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}</p>
+              <span class="part-card__status">{{ part.inventoryStatus }}</span>
+              <span class="part-card__action">View details →</span>
+            </a>
+          </li>
+        }
+      </ul>
+
+      @if (result.totalPages > 1) {
+        <nav class="pagination" aria-label="Spare parts catalog pagination">
+          @if (result.page > 1) {
+            <a routerLink="/spare-parts" [queryParams]="{ page: result.page - 1 }" queryParamsHandling="merge">
+              ← Previous
+            </a>
+          }
+          <span>Page {{ result.page }} of {{ result.totalPages }}</span>
+          @if (result.page < result.totalPages) {
+            <a routerLink="/spare-parts" [queryParams]="{ page: result.page + 1 }" queryParamsHandling="merge">
+              Next →
+            </a>
+          }
+        </nav>
+      }
+    }
+  }
+</main>

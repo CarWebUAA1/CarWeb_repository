@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { QuickAccessSidebarComponent } from '../quick-access-sidebar/quick-access-sidebar.component';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 
@@ -12,9 +13,14 @@ import { SearchBarComponent } from '../search-bar/search-bar.component';
 })
 export class SiteHeaderComponent {
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
 
-  // The catalog does not filter by this term yet: brand/model filtering is US-04.
+  protected get isSparePartsCatalog(): boolean {
+    return this.router.url.startsWith('/spare-parts');
+  }
+
   onSearch(term: string) {
-    this.router.navigate(['/cars'], { queryParams: { search: term } });
+    const catalog = this.isSparePartsCatalog ? '/spare-parts' : '/cars';
+    this.router.navigate([catalog], { queryParams: { search: term } });
   }
 }

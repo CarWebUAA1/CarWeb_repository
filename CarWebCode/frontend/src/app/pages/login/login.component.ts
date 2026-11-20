@@ -3,7 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AuthService, isEmployeeRole } from '../../services/auth.service';
+import { AuthService, isEmployeeRole, isManagerRole } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -37,8 +37,10 @@ export class LoginComponent {
           this.isSuccess.set(true);
           this.message.set(response.message || 'Login successful.');
           this.password = '';
-          // Employees and managers go to the employee page; customers back to the user page.
-          this.router.navigate([isEmployeeRole(response.user?.role) ? '/employee' : '/']);
+          const role = response.user?.role;
+          this.router.navigate([
+            isManagerRole(role) ? '/manager' : isEmployeeRole(role) ? '/employee' : '/',
+          ]);
         },
         error: (error: unknown) => this.message.set(errorText(error)),
       });

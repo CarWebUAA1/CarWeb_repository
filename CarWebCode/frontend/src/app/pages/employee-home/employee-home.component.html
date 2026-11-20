@@ -20,10 +20,19 @@
   <ul class="tasks">
     @for (task of tasks; track task.title) {
       <li class="task">
-        <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
-        <h2 class="task__title">{{ task.title }}</h2>
-        <p class="task__description">{{ task.description }}</p>
-        <span class="task__badge">Coming soon</span>
+        @if (task.route) {
+          <a class="task__link" [routerLink]="task.route">
+            <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
+            <h2 class="task__title">{{ task.title }}</h2>
+            <p class="task__description">{{ task.description }}</p>
+            <span class="task__action">Browse catalog</span>
+          </a>
+        } @else {
+          <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
+          <h2 class="task__title">{{ task.title }}</h2>
+          <p class="task__description">{{ task.description }}</p>
+          <span class="task__badge">Coming soon</span>
+        }
       </li>
     }
   </ul>
