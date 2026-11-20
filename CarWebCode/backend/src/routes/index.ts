@@ -10,6 +10,7 @@ import { TestDriveController } from "../controllers/testDrive.controller.js";
 import { MySqlTestDriveRepository } from "../repositories/testDrive.repository.js";
 import { TestDriveService } from "../services/testDrive.service.js";
 import { createTestDriveRouter } from "./testDrive.routes.js";
+import AppointmentsRoutes from "./Appointments.routes.js";
 
 export class AppRoutes {
     static get router(): Router {
@@ -29,5 +30,7 @@ export class AppRoutes {
         const testDriveController = new TestDriveController(new TestDriveService(new MySqlTestDriveRepository(pool)));
         router.use("/test-drives", createTestDriveRouter(testDriveController));
         return router;
+
+        router.use("/appointments", AppointmentsRoutes);
     }
 }
