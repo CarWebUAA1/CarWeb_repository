@@ -31,5 +31,6 @@ export default class EmployeeHomeComponent {
     { title: 'Register a sale', description: 'Record cars sold to customers.', icon: 'fa-handshake' },
     { title: 'Documents', description: 'Verify the documents required for each transaction.', icon: 'fa-folder-open' },
     { title: 'Contracts', description: 'Generate the contract of an operation.', icon: 'fa-file-signature' },
+    { title: 'Spare parts catalog', description: 'Search spare parts and record stock movements.', icon: 'fa-gears', route: '/spare-parts' },
   ];
 }

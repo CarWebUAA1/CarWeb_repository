@@ -8,6 +8,7 @@ import { Component, input, output, signal } from '@angular/core';
 })
 export class SearchBarComponent {
   readonly placeholder = input('Search by brand or model');
+  readonly searchLabel = input('Search cars');
   // Not named `search`: <input type="search"> fires a native `search` event that would bubble to the host.
   readonly searchSubmit = output<string>();
 

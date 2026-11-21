@@ -6,6 +6,10 @@ import { CarService } from "../services/car.service.js";
 import CarsRoutes from "./Cars.routes.js";
 import { createCarRouter } from "./car.routes.js";
 import usersRoutes from "./userRoutes.ts";
+import { SparePartController } from "../controllers/sparePart.controller.js";
+import { MySqlSparePartRepository } from "../repositories/sparePart.repository.js";
+import { SparePartService } from "../services/sparePart.service.js";
+import { createSparePartRouter } from "./sparePart.routes.js";
 import { TestDriveController } from "../controllers/testDrive.controller.js";
 import { MySqlTestDriveRepository } from "../repositories/testDrive.repository.js";
 import { TestDriveService } from "../services/testDrive.service.js";
@@ -28,6 +32,15 @@ export class AppRoutes {
         // Test drive scheduling, rejecting overlapping schedules for the same car.
         const testDriveController = new TestDriveController(new TestDriveService(new MySqlTestDriveRepository(pool)));
         router.use("/test-drives", createTestDriveRouter(testDriveController));
+        
+        const sparePartController = new SparePartController(
+            new SparePartService(
+                new MySqlSparePartRepository(pool)
+            )
+        );
+
+        router.use("/spare-parts", createSparePartRouter(sparePartController));
+        
         return router;
     }
 }

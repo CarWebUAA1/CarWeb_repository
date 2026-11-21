@@ -1279,3 +1279,28 @@ Para reemplazar el diagrama `Entity-relationship_model/CarWebER.png`, que está 
 - Se pide `.dia` en XML sin comprimir porque Dia lo abre sin problema y una IA lo puede escribir como texto.
 - Se omiten `created_at`/`updated_at` en el diagrama (están en todas las tablas y lo saturan), pero sí van en el diccionario.
 - Nombres técnicos en inglés (como en el código) y descripciones en español (como el resto de la documentación).
+
+---
+
+## 2026-11-20 — Resolución del merge con la rama de repuestos (spare parts)
+
+**Ubicación:** `CarWebCode/frontend/src/app/` (`app.routes.ts`, `app.routes.server.ts`, `pages/employee-home/`)
+
+### Qué se hizo
+
+Al fusionar el commit `31451eb` ("almost everything related to spareParts") quedaron 5 archivos en conflicto. Se habían quitado los marcadores, pero las dos versiones quedaron mezcladas:
+
+- **`app.routes.ts` y `app.routes.server.ts`:** la ruta `employee/test-drives` y la nueva ruta `manager` quedaron fusionadas en un solo objeto (dos `path`), así que se perdía una de las dos. Se separaron en dos rutas.
+- **`app.routes.ts`:** se quitó el `import { SparePartsComponent }` estático, que no se usaba (la ruta `spare-parts/register` ya lo carga con `loadComponent`) y metía el componente en el bundle inicial.
+- **`employee-home.component.html`:** tenía dos plantillas de tarjeta encimadas (`<li>` sin cerrar). Se dejó la de HEAD (`.task--link` con "Open →"), que sirve para cualquier tarea con ruta: ahora **Test drives** y **Spare parts catalog**.
+- **`employee-home.component.css`:** se quitaron `.task__link` y `.task__action`, que solo usaba la plantilla descartada.
+- **`employee-home.component.spec.ts`:** dos `it` encimados en uno. Se unificaron: 8 tareas, 6 "Coming soon" y 2 enlaces (`/employee/test-drives` y `/spare-parts`).
+
+### Para qué sirve
+
+Para que el frontend vuelva a compilar con las páginas de test drives, del gerente y de repuestos funcionando a la vez.
+
+### Por qué así
+
+- Se eligió la tarjeta de HEAD porque su texto ("Open") es genérico; la entrante decía "Browse catalog", que solo tiene sentido para el catálogo de repuestos.
+- Verificado: `ng build` y `ng test` (69 tests) en el frontend, y `tsc` y `vitest` (54 tests) en el backend. El backend necesitaba `npm install` porque el merge agregó `jsonwebtoken`.

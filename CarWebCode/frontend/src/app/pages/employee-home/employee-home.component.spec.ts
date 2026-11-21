@@ -25,12 +25,13 @@ describe('EmployeeHomeComponent', () => {
     expect(el.querySelector('.employee-header__name')?.textContent).toContain('Ana');
   });
 
-  it('lists the employee tasks; only Test drives is available so far', () => {
-    expect(el.querySelectorAll('.task').length).toBe(7);
+  it('lists the employee tasks; Test drives and Spare parts are available so far', () => {
+    expect(el.querySelectorAll('.task').length).toBe(8);
     expect(el.querySelectorAll('.task__badge').length).toBe(6);
-    const link = el.querySelector<HTMLAnchorElement>('a.task--link');
-    expect(link?.textContent).toContain('Test drives');
-    expect(link?.getAttribute('href')).toBe('/employee/test-drives');
+    const links = [...el.querySelectorAll<HTMLAnchorElement>('a.task--link')];
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/employee/test-drives', '/spare-parts']);
+    expect(links[0].textContent).toContain('Test drives');
+    expect(links[1].textContent).toContain('Spare parts catalog');
   });
 
   it('logs out and goes back to the login', () => {

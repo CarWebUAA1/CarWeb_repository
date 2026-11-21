@@ -47,7 +47,8 @@ describe('LoginComponent', () => {
 
   it.each([
     ['employee', '/employee'],
-    ['manager', '/employee'],
+    ['manager', '/manager'],
+    ['Manager', '/manager'],
     ['client', '/'],
   ])('sends a %s to %s after logging in', async (role, target) => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);

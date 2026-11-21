@@ -21,6 +21,22 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'manager',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'spare-parts',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'spare-parts/register',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'spare-parts/:id',
+    renderMode: RenderMode.Client
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender
   }
