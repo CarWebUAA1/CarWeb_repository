@@ -907,3 +907,375 @@ UPDATE User SET role = 'employee' WHERE Email = 'correo@del-empleado.com';
 
 ---
 
+
+## 2026-11-06 — Nueva base de datos `carweb` (esquema, datos de prueba, pruebas y consultas)
+
+**Ubicación:** `CarWebCode/sql/` → `schema.sql`, `seed.sql`, `checks.sql`, `queries.sql` (nuevos). **No** se modificaron `CarWeb.sql` ni `seed_cars.sql`, porque el backend actual depende de ellos.
+
+### Contexto del diseño
+
+Los **clientes no tienen cuenta**: su nombre, teléfono y correo se guardan solo en la cita (`appointments`). Solo empleados y gerentes tienen usuario. Las pruebas de manejo y las operaciones se ligan a la cita de la que salieron, y de ahí se obtienen los datos del cliente. Todo el SQL está en inglés (regla del proyecto).
+
+### `schema.sql` — 13 tablas
+
+`employees`, `managers`, `cars`, `spare_parts`, `stock_movements`, `appointments`, `test_drives`, `inspections`, `trades`, `documents`, `contracts`, `receipts`, `price_breakdowns`. Se crean en orden de dependencia.
+
+| Regla | Cómo se implementó |
+|---|---|
+| InnoDB, `utf8mb4`, `utf8mb4_0900_ai_ci` en la base y en cada tabla | `CREATE DATABASE … COLLATE utf8mb4_0900_ai_ci` y `ENGINE/CHARSET/COLLATE` en cada `CREATE TABLE`. La búsqueda por marca y modelo ignora mayúsculas y acentos |
+| PK `INT UNSIGNED AUTO_INCREMENT` (excepto `contracts` y `receipts`, que usan su número) | Sí |
+| `created_at` / `updated_at` en todas las tablas | Sí |
+| Dinero `DECIMAL(12,2)`, teléfonos `VARCHAR(15)`, fechas `DATETIME`, fotos `JSON` | Sí |
+| Nombres de restricciones | `pk_`, `fk_<tabla>_<referencia>`, `uq_`, `chk_` (únicos en toda la base), `idx_` |
+| Llaves foráneas | **20**, todas `ON DELETE RESTRICT ON UPDATE RESTRICT`, salvo `fk_documents_trade` (`ON DELETE CASCADE`). Esto evita el error 3823: MySQL no permite CASCADE / SET NULL en columnas usadas por un CHECK o por una columna generada `STORED` |
+| Índice por cada llave foránea | Cada FK tiene su índice. Cuando la FK ya es la primera columna de un `UNIQUE` o de un índice compuesto, ese índice la cubre: `test_drives.appointment_id`, `test_drives.car_id`, `documents.trade_id`, `contracts` / `receipts` / `price_breakdowns.trade_id` |
+| **16 CHECK**: año 1990–2100; precios > 0 si existen (`cars`, `trades`, `spare_parts`, `receipts`, `price_breakdowns`); exactamente un artículo (`stock_movements`, `trades`); refacción solo `Purchase`; horario y horas reales de la prueba de manejo; reserva de máximo 72 h | Valores fijos, sin `NOW()` (MySQL no permite funciones no deterministas en un CHECK) |
+| Una sola operación activa por auto | Columna generada `active_car_id = IF(is_active, car_id, NULL) STORED` con `UNIQUE`. MySQL no tiene índices parciales, y un `UNIQUE` acepta varios `NULL` |
+| `stock_movements` no se edita ni se borra | **2 triggers** (`BEFORE UPDATE` / `BEFORE DELETE`) con `SIGNAL SQLSTATE '45000'`. Un CHECK o una FK no pueden impedir UPDATE/DELETE. El cuerpo es de una sola instrucción, así que no necesita `DELIMITER` y funciona con *Execute All* |
+| Cita: el mismo correo no puede tener dos citas a la misma hora | `uq_appointments_client_email_datetime` |
+| Enlace para modificar/cancelar sin cuenta | `manage_token_hash CHAR(64) UNIQUE`: hash SHA-256 del token. El token original nunca se guarda |
+
+**Agregados que la especificación no pedía de forma literal** (sin tablas ni columnas nuevas): `chk_trades_reserved_until` (la reserva vence a máximo 72 h de `trade_date`), los 2 triggers de `stock_movements` e `idx_spare_parts_brand_model` (filtrar refacciones por marca y modelo compatibles).
+
+**Sin `IF NOT EXISTS` en las tablas, a propósito:** si una tabla ya existe con otra estructura, el script **falla con un error claro** en vez de saltarla en silencio y dejar un esquema mezclado.
+
+### `seed.sql`
+
+1 gerente, 2 empleados (hashes bcrypt reales de la contraseña de desarrollo **`DevPassword123!`**), 8 autos en estados distintos (Available ×3, Reserved, Sold, In test drive, Pending evaluation, Spare parts), 3 refacciones (2 sacadas del auto 8), 3 movimientos de inventario, 5 citas de 3 clientes (Laura 2, Carlos 2, Sofía 1), 1 prueba de manejo, 2 inspecciones y 2 operaciones completas (una compra y una venta) con 7 documentos, 2 contratos, 2 recibos y 2 desgloses.
+
+**Coherencia:** el auto vendido está `Sold` / `Out of stock` y tiene su movimiento `Out/Sale`; el comprado está `Pending evaluation`, con su inspección y su movimiento `In/Purchase`; el recibo = precio final = desglose (convención: `final = base + ajustes + cargos − descuentos`, verificada); `manage_token_hash = SHA2('…', 256)` (64 hex); fotos en JSON válido. Nombres de personas ficticios.
+
+### `checks.sql`
+
+Cada prueba es un bloque que se ejecuta con **Ctrl + Enter**, con el error esperado en un comentario. Empieza con `SET SQL_SAFE_UPDATES = 0;`.
+
+| # | Prueba | Error obtenido (verificado) |
+|---|---|---|
+| 1 | VIN repetido | 1062 `Duplicate entry '3TMCZ5AN1LM000001' for key 'cars.uq_cars_vin'` |
+| 2 | Segunda operación activa para el mismo auto (con su preparación y limpieza) | 1062 `… for key 'trades.uq_trades_active_car_id'` |
+| 3 | Movimiento con auto y refacción | 3819 `Check constraint 'chk_stock_movements_one_item' is violated.` |
+| 4 | Dos citas, mismo correo y hora | 1062 `… for key 'appointments.uq_appointments_client_email_datetime'` |
+| 5 | Segunda prueba de manejo de la misma cita | 1062 `… for key 'test_drives.uq_test_drives_appointment_id'` |
+| 6 | Precio negativo | 3819 `Check constraint 'chk_cars_sale_price' is violated.` |
+| 7 | Borrar una cita con operaciones | 1451 `… CONSTRAINT fk_trades_appointment …` |
+| 8–12 (extra) | Refacción como `Sale`; año 1985; prueba de manejo que termina antes de empezar; editar/borrar un movimiento; borrar una operación con contrato | 3819 `chk_trades_spare_part_purchase`, 3819 `chk_cars_year`, 3819 `chk_test_drives_schedule`, 1644 (mensajes de los triggers), 1451 `fk_contracts_trade` |
+
+### `queries.sql`
+
+Para cada operación: el nombre, teléfono y correo del cliente, tomados de su cita (`trades JOIN appointments`), más el auto, el empleado responsable y el gerente que aprobó.
+
+### Relaciones
+
+| Relación | Cardinalidad | Columna que la implementa |
+|---|---|---|
+| Car **has** SpareParts | 1 : N (opcional) | `spare_parts.car_id` (NULL) |
+| Car **moves in** StockMovements | 1 : N | `stock_movements.car_id` (NULL; uno de los dos) |
+| SparePart **moves in** StockMovements | 1 : N | `stock_movements.spare_part_id` (NULL; uno de los dos) |
+| Manager **records** StockMovements | 1 : N | `stock_movements.manager_id` |
+| Employee **is assigned to** Appointments | 1 : N (opcional) | `appointments.employee_id` (NULL) |
+| Employee **decides** Appointments | 1 : N (opcional) | `appointments.decision_by` (NULL) |
+| Car **is the subject of** Appointments | 1 : N (opcional) | `appointments.car_id` (NULL) |
+| Appointment **leads to** TestDrive | 1 : 0..1 | `test_drives.appointment_id` (UNIQUE) |
+| Employee **accompanies** TestDrives | 1 : N | `test_drives.employee_id` |
+| Car **is driven in** TestDrives | 1 : N | `test_drives.car_id` |
+| Car **is inspected in** Inspections | 1 : N | `inspections.car_id` |
+| Appointment **starts** Trades | 1 : N | `trades.appointment_id` |
+| Employee **is responsible for** Trades | 1 : N | `trades.employee_id` |
+| Manager **approves or rejects** Trades | 1 : N (opcional) | `trades.manager_id` (NULL) |
+| Car **is traded in** Trades | 1 : N, **una activa** | `trades.car_id` + `uq_trades_active_car_id` |
+| SparePart **is sold in** Trades | 1 : N | `trades.spare_part_id` |
+| Trade **requires** Documents | 1 : N (uno por tipo) | `documents.trade_id` (CASCADE) + `uq_documents_trade_id_document_type` |
+| Trade **is covered by** Contract | 1 : 0..1 | `contracts.trade_id` (UNIQUE) |
+| Trade **produces** Receipt | 1 : 0..1 | `receipts.trade_id` (UNIQUE) |
+| Trade **has** PriceBreakdown | 1 : 0..1 | `price_breakdowns.trade_id` (UNIQUE) |
+
+### Reglas que MySQL no puede imponer con restricciones (y alternativa)
+
+| Regla | Por qué no | Alternativa |
+|---|---|---|
+| La reserva vence 72 h después de **ahora** | Un CHECK no puede usar `NOW()` | `chk_trades_reserved_until` la limita respecto a `trade_date`. Liberar reservas vencidas lo hace la aplicación o un `EVENT` programado |
+| No se pueden encimar dos pruebas de manejo del mismo auto | MySQL no tiene restricciones de exclusión por rango | Índice `(car_id, schedule_start)` para que la consulta de choque sea rápida. Se valida en el backend (o en un trigger) |
+| `test_drives` solo de citas tipo "Test drive"; `trades` solo de citas "Purchase" / "Sale evaluation" | Un CHECK no puede leer otra tabla | Validación en el backend (o un trigger `BEFORE INSERT`) |
+| Coherencia entre el estado del auto y sus operaciones/movimientos (p. ej. `Sold` → `Out of stock`) | Involucra varias tablas | La aplicación actualiza todo en una transacción |
+
+### Verificación
+
+- En una **base temporal** (creada y borrada en la prueba; la base real `CarWeb` **no se tocó**), con MySQL 8.0.46: `schema.sql` y `seed.sql` cargan completos, tanto con `mysql2` como con el cliente `mysql` de línea de comandos (que separa por `;` igual que Workbench). Resultado: 13 tablas, todas con `utf8mb4_0900_ai_ci`; 20 FK (1 CASCADE); 16 CHECK; 2 triggers; las cantidades del seed coinciden; 6/6 JSON válidos; 2/2 desgloses cuadran.
+- `checks.sql`: las 7 pruebas obligatorias y las 6 extra dan exactamente el error documentado. Las de preparación y limpieza pasan.
+- `queries.sql`: devuelve las 2 operaciones con los datos del cliente de su cita.
+
+### ⚠️ Antes de usarla
+
+1. **Choca con la base actual.** En Windows, MySQL no distingue mayúsculas (`lower_case_table_names = 1`): `carweb` **es** la base `CarWeb` que ya existe, y ya tiene tablas `cars` y `trades` con la estructura vieja. `schema.sql` fallará en `cars` (después de crear `employees` y `managers`). Hay que borrar las tablas viejas o la base completa (respaldarla primero) y luego ejecutar `schema.sql` y `seed.sql`.
+2. **El backend y el frontend actuales usan el esquema viejo:**
+   - El catálogo lee `Cars` / `CarPhotos` con columnas en PascalCase; ahora es `cars` en snake_case, con las fotos en JSON.
+   - El registro y el login usan la tabla `User`. En este diseño **los clientes no tienen cuenta**, así que el registro de clientes ya no aplica, y el login debe leer `employees` y `managers`.
+   - Hay que migrar el código antes de cambiar de base.
+
+---
+
+## 2026-11-06 — Cambio a la base nueva, reservas de 72 h y pruebas de manejo encimadas
+
+### 1. Base vieja eliminada y base nueva cargada
+
+- El usuario confirmó que tenía **respaldo** de la base vieja.
+- Contenido antes de borrarla: `carphotos(81)`, `cars(28)`, `user(1)` y tablas vacías (`document`, `receipt`, `spareparts`, `stockmovement`, `trades`).
+- Se ejecutó `DROP DATABASE carweb`. En Windows es la misma base que `CarWeb`, porque `lower_case_table_names = 1`.
+- Se cargaron `sql/schema.sql` y `sql/seed.sql`. Resultado: las 13 tablas nuevas con sus datos de prueba.
+- `event_scheduler` está en `ON` en este MySQL. No se usa, ver el punto 2.
+
+### 2. Liberación de reservas de 72 horas (alternativa a "un CHECK no puede usar `NOW()`")
+
+| Archivo | Qué hace |
+|---|---|
+| `backend/src/repositories/trade.repository.ts` (nuevo) | `releaseExpiredReservations()`, en **una transacción**: selecciona con `FOR UPDATE` las operaciones activas en estado **`In progress`** con `reserved_until < NOW()`; las marca `Cancelled` e inactivas (`is_active = FALSE`, con lo que `active_car_id` queda en NULL y el auto puede tener otra operación); regresa a `Available` el auto o la refacción si estaban `Reserved`. Devuelve los ids liberados |
+| `backend/src/jobs/reservationExpiry.job.ts` (nuevo) | `startReservationExpiryJob(repo, intervalMs = 5 min)`: corre **al arrancar y luego cada 5 minutos**; nunca encima dos ejecuciones; si la base falla, lo registra y sigue; el temporizador usa `unref()` (no mantiene vivo el proceso); devuelve una función para detenerlo |
+| `backend/src/app.ts` | Arranca el job después de levantar el servidor |
+
+**Por qué en el backend y no como `EVENT` de MySQL:** el usuario pidió programarlo "en el back". Así no depende de la configuración `event_scheduler` del servidor de cada integrante, y la lógica queda en el código con pruebas.
+
+**Por qué solo `In progress`:** una operación en `Pending approval` ya está esperando la decisión del gerente, y cancelarla sola rompería ese flujo. Se usa `NOW()` de la base, el mismo reloj con el que se calcula `reserved_until`.
+
+### 3. Pruebas de manejo encimadas (alternativa a "MySQL no tiene restricciones de exclusión")
+
+Endpoint nuevo **`POST /api/v1/test-drives`**, con cuerpo `{ appointmentId, employeeId, carId, scheduleStart, scheduleEnd }`. Sigue la arquitectura en capas:
+
+| Archivo | Qué hace |
+|---|---|
+| `validators/testDrive.ts` | Ids enteros positivos; fechas `YYYY-MM-DD HH:mm` (o con `T`, segundos opcionales), rechaza fechas imposibles (30 de febrero); normaliza a `YYYY-MM-DD HH:mm:ss`; `scheduleEnd > scheduleStart`. Las fechas viajan como texto, **nunca** como `Date` de JS, para que no haya corrimientos de zona horaria con `DATETIME` |
+| `repositories/testDrive.repository.ts` | `scheduleIfFree()`, en **una transacción**: **bloquea la fila del auto** (`SELECT … FOR UPDATE`), así dos solicitudes simultáneas para el mismo auto se atienden una tras otra; verifica que existan el auto, el empleado y la cita; que la cita sea tipo **"Test drive"** (otra de las alternativas propuestas); que la cita no tenga ya una prueba; y busca un **choque**: `schedule_start < fin_nuevo AND schedule_end > inicio_nuevo` (usa `idx_test_drives_car_id_schedule_start`). Si todo está bien, inserta |
+| `services/testDrive.service.ts` | Traduce el resultado: 404 (auto, empleado o cita no existen) o **409** (cita que no es de prueba de manejo, cita que ya tiene prueba, o **"The car already has a test drive from … to …"**) |
+| `controllers/testDrive.controller.ts`, `routes/testDrive.routes.ts`, `routes/index.ts` | Ruta montada en `/test-drives`; responde **201** con la prueba creada |
+| `dtos/testDrives/TestDriveDto.ts` | Forma del cuerpo y de la respuesta |
+| `errors/HttpError.ts` | Nuevo `ConflictError` (409) |
+
+**Regla de choque:** dos horarios del **mismo auto** chocan si cada uno empieza antes de que termine el otro. Una prueba que empieza **justo** cuando termina otra sí se permite. Autos distintos nunca chocan.
+
+### 4. Catálogo y login pasados al esquema nuevo
+
+Al borrar la base vieja, estos dos dejaban de funcionar:
+
+| Archivo | Cambio |
+|---|---|
+| `repositories/carFilters.ts` | Columnas en snake_case (`status`, `inventory_status = 'In stock'`, `brand`, `model`). El catálogo exige además `sale_price IS NOT NULL`, porque ahora el precio puede ser nulo y no se puede mostrar un auto sin precio |
+| `repositories/car.repository.ts` | Lee `cars` (snake_case). La foto principal es el primer elemento de `cars.photos` (`JSON_EXTRACT(photos, '$[0]')`); el detalle convierte la lista JSON en `[{ id, url, isMain }]`. Orden: más nuevos primero (`created_at`) |
+| `dtos/cars/CarDto.ts` | `price` y `tireCondition` ahora aceptan `null` |
+| `constants/carStatus.ts` | Los 7 valores del `ENUM` nuevo |
+| `controllers/userController.ts` → `loginUser` | Busca en **`employees`** y luego en **`managers`** (`UNION ALL`). El rol (`employee` / `manager`) sale de la tabla. La respuesta mantiene el mismo formato, así que el frontend no cambia |
+
+### 5. Otros
+
+- `README.md`: requisito **MySQL 8.0.16+** (XAMPP/MariaDB ya no sirve por `utf8mb4_0900_ai_ci`); pasos con `schema.sql` y `seed.sql` (el primero ya crea la base); aviso de borrar la base vieja; `DB_NAME=carweb`; contraseña de desarrollo de los usuarios del seed.
+- `.env.example`: no se tocó (el equipo dejó los valores vacíos).
+
+### Verificación
+
+- Backend: `tsc` sin errores; `npm test` → **6 archivos, 47 pruebas** (26 nuevas):
+  - `reservationExpiry.job.test.ts`: corre al iniciar y en cada intervalo; registra lo liberado; sigue después de un error de la base; no encima ejecuciones; se detiene.
+  - `testDrives.test.ts`: crea y normaliza fechas; permite empezar justo al terminar otra; rechaza 4 tipos de choque con 409; mismo horario en otro auto sí se permite; 6 casos de 400; y los 404/409 de cada falla.
+  - `carFilters.test.ts` actualizado; `app.test.ts` (del equipo) con un mock del job y la verificación de que arranca.
+- **Contra MySQL real**, con datos temporales (correo `claude-check@example.com`), limpiados al terminar:
+  - **Job:** una operación con la reserva vencida hace 2 días sobre el auto 4 → al arrancar el backend: `[reservations] released 1 expired reservation(s): trades 3`, la operación quedó `Cancelled` / inactiva y el auto 4 `Available`.
+  - **Pruebas de manejo:** choque con la existente → 409; empezar justo al terminar → 201; la misma cita otra vez → 409; cita tipo Viewing → 409; auto inexistente → 404; **dos solicitudes simultáneas** para el mismo auto y horario → una 201 y otra 409 (el bloqueo funciona).
+  - **Catálogo:** solo autos disponibles con foto principal; "MÁZDA" → Mazda CX-5; el detalle del auto 7 devuelve `price: null`, `isAvailable: false`.
+  - **Login:** `ana.torres@carweb.test` → employee; `MARIA.LOPEZ@carweb.test` (mayúsculas) → manager; contraseña mala o correo inexistente → 401 genérico.
+
+### Pendiente (siguiente paso: frontend y lo que quedó con el esquema viejo)
+
+- **Registro de clientes:** `POST /users/register` y la página `/register` usan la tabla `User`, que ya no existe (responde 500). En el diseño nuevo **los clientes no tienen cuenta**, así que hay que quitarlos o cambiarlos por "agendar cita".
+- **CRUD de inventario del equipo** (`Cars.Controller.ts`, `/cars/getAllCars`, etc.) usa columnas viejas (`InventoryStatus = 1`, PascalCase): ya no funciona.
+- **Frontend:** mostrar "precio no disponible" cuando `price` es `null`, y `tireCondition` nulo; crear la pantalla de pruebas de manejo para empleados que use `POST /test-drives`.
+- **Protección:** `POST /test-drives` es para empleados, pero el backend todavía no tiene sesión ni token, así que hoy cualquiera puede llamarlo.
+- **Archivos viejos:** `sql/CarWeb.sql`, `sql/seed_cars.sql`, `sql/borrarDemo.sql` y la colección de Postman del equipo (`Register User`) quedaron obsoletos. Conviene borrarlos para que nadie los vuelva a ejecutar.
+
+---
+
+## 2026-11-06 — Se borran los archivos del esquema viejo
+
+Con la confirmación del usuario se eliminaron los archivos que solo servían para la base vieja, para que nadie los vuelva a ejecutar:
+
+| Archivo | Por qué ya no sirve |
+|---|---|
+| `CarWebCode/sql/CarWeb.sql` | Esquema viejo (`Cars`, `User`, `CarPhotos`…). Lo reemplaza `sql/schema.sql`. En Windows, ejecutarlo recrearía tablas que chocan con las nuevas |
+| `CarWebCode/sql/seed_cars.sql` | Datos de prueba del esquema viejo. Lo reemplaza `sql/seed.sql` |
+| `CarWebCode/sql/borrarDemo.sql` (del equipo) | Borraba las tablas viejas |
+| `backend/postman/collections/CarWeb API/Users/Register User.request.yaml` (del equipo) | Petición a `POST /users/register`, que usa la tabla `User`, que ya no existe (en el diseño nuevo los clientes no tienen cuenta) |
+| Variables `userName`, `userEmail`, `userPassword` y `userPhone` de `backend/postman/environments/CarWeb Local.environment.yaml` | Solo las usaba esa petición. Se dejó `baseUrl` y la colección `CarWeb API`, para las peticiones nuevas |
+
+Antes de borrar se verificó que ningún otro archivo los usara (solo esta bitácora los menciona, como historial). En `CarWebCode/sql/` quedan: `schema.sql`, `seed.sql`, `checks.sql` y `queries.sql`.
+
+---
+
+## 2026-11-06 — Frontend con el esquema nuevo: sin registro de clientes, precio nulo y pantalla de pruebas de manejo
+
+### 1. Se quitó el registro de clientes
+
+En el diseño nuevo **los clientes no tienen cuenta**: solo agendan citas. Solo el personal (empleados y gerentes) inicia sesión.
+
+| Archivo | Cambio |
+|---|---|
+| `frontend/src/app/pages/register/` | **Eliminada** (componente, plantilla y pruebas) |
+| `app.routes.ts` | Sin la ruta `/register`. Si alguien entra a esa URL, la ruta comodín lo manda al inicio |
+| `services/user.service.ts`, `models/user.model.ts` | Sin `register()`, `RegisterUserRequest` ni `RegisterUserResponse` |
+| `pages/login/login.component.html` | Subtítulo **"Staff access"**. El enlace "Don't have an account? Sign up" se cambió por **"← Back to CarWeb"** |
+| `components/quick-access-sidebar` | *Log in* / *Sign up* → **Employee access** (`/employee`). *My appointments* → **Schedule an appointment** (Soon): sin cuenta, el cliente maneja su cita con el enlace del correo |
+| `backend/src/controllers/userController.ts`, `routes/userRoutes.ts` | Se eliminó `registerUser` y `POST /users/register` (usaban la tabla `User`, que ya no existe) |
+
+### 2. Precio y estado de llantas sin dato
+
+`cars.sale_price` y `cars.tire_condition` pueden ser `NULL` en el esquema nuevo:
+
+- `models/car.model.ts`: `price: number | null`, `tireCondition: string | null`.
+- `pages/car-detail`: muestra **"Price not available"** (en gris) si no hay precio, y **"—"** si no hay estado de llantas.
+- El catálogo no cambia: el backend solo lista autos con precio.
+
+### 3. Pantalla de pruebas de manejo para empleados (`/employee/test-drives`)
+
+**Backend (consultas para alimentar la pantalla):**
+
+| Endpoint | Devuelve |
+|---|---|
+| `GET /api/v1/test-drives/pending-appointments` | Citas tipo **"Test drive"** en `Pending` o `Confirmed`, de **hoy en adelante**, que **todavía no** tienen prueba programada. Incluye cliente, fecha y auto (`Brand Model Year`) |
+| `GET /api/v1/test-drives` | Pruebas de manejo que **no han terminado** (`schedule_end >= NOW()`), con auto, cliente y empleado, ordenadas por inicio |
+
+Están en `repositories/testDrive.repository.ts`, `services/testDrive.service.ts`, `controllers/testDrive.controller.ts`, `routes/testDrive.routes.ts`, con sus DTOs en `dtos/testDrives/TestDriveDto.ts`.
+
+**Frontend:**
+
+| Archivo | Qué hace |
+|---|---|
+| `components/employee-header/` (nuevo) | El encabezado del portal de empleados (logo, "Employee portal", nombre, Log out) se sacó de la home de empleados para **reutilizarlo** |
+| `pages/employee-home/` | Usa `<app-employee-header>`. La tarjeta **Test drives** ahora es un enlace ("Open →"); las demás siguen "Coming soon" |
+| `pages/employee-test-drives/` (nuevo) | **Programar:** se elige una cita pendiente de la lista (fecha · cliente · auto); el auto se toma de la cita; el horario se **sugiere** (hora de la cita + **45 min**) y se puede editar; el empleado que acompaña es el que inició sesión; al guardar se recargan las dos listas. **Errores:** muestra el mensaje del backend, por ejemplo el choque *"The car already has a test drive from … to …"*. Si la cita no tiene auto, avisa y no deja programarla. **Gerentes:** ven las listas pero no el formulario, porque la base exige que quien acompaña sea un **empleado** (`test_drives.employee_id`). **Próximas pruebas:** tabla con cuándo, auto, cliente y empleado |
+| `services/test-drive.service.ts`, `models/test-drive.model.ts` (nuevos) | Llamadas y tipos de los 3 endpoints |
+| `app.routes.ts` / `app.routes.server.ts` | Ruta `employee/test-drives` con `employeeGuard`, renderizada en el navegador |
+
+### Verificación
+
+- Backend: `tsc` sin errores; `npm test` → **49 pruebas** (+2: los dos `GET`).
+- Frontend: `ng build` sin errores; `ng test` → **12 archivos, 54 pruebas**. Nuevas o actualizadas:
+  - pantalla de pruebas de manejo: 6 casos, más 3 de `addMinutes` (incluye cambio de día y de año);
+  - "Price not available" en el detalle;
+  - enlace de la tarjeta Test drives;
+  - enlaces del menú ☰.
+  - Se eliminaron las 4 pruebas del registro.
+- **Navegador real contra MySQL**, con 2 citas temporales para el auto 2 a las 17:00 y 17:15 (borradas al terminar):
+  1. El login ya no tiene "Sign up"; `/register` → `/`.
+  2. Login de Ana → `/employee` → tarjeta **Test drives** → `/employee/test-drives`.
+  3. Las dos citas aparecen en la lista. Al elegir la de las 17:00 se sugiere 17:00 → 17:45.
+  4. Programarla → *"Test drive scheduled for Pedro Ruiz."*, y aparece en "Upcoming test drives".
+  5. Programar la de las 17:15 (se encima) → *"The car already has a test drive from 2026-11-20 17:00:00 to 2026-11-20 17:45:00"*.
+  6. Detalle del auto 7 → *"Price not available"*.
+
+### Pendiente
+
+- **CRUD de inventario del equipo** (`Cars.Controller.ts`, `/cars/getAllCars`, etc.): sigue con las columnas viejas y no funciona con la base nueva.
+- **Protección del backend:** los endpoints de empleados (`/test-drives`) no exigen sesión ni token todavía.
+- **Seed:** no trae citas de prueba de manejo pendientes (la especificación fija 5 citas), así que la lista de la pantalla aparece vacía hasta que se registre una. Por ahora se crean con un `INSERT INTO appointments … appointment_type = 'Test drive'`.
+
+---
+
+## 2026-11-06 — `employees` y `managers` unificadas en `staff`
+
+### Decisión (del usuario)
+
+Una sola tabla para el personal, y **el gerente puede hacer todas las tareas del empleado además de las suyas** (aprobar o rechazar operaciones y registrar movimientos de inventario).
+
+**Por qué:** las dos tablas tenían exactamente las mismas columnas. El rendimiento no era el problema: el login hacía un `UNION ALL` de dos búsquedas indexadas, una diferencia despreciable. Las ventajas son de integridad y mantenimiento:
+- El **correo es único en todo el personal**: antes el mismo correo podía estar en las dos tablas.
+- **Ascender** a un empleado es un `UPDATE` del rol, no copiar la fila y cambiarle el id.
+- Login y bloqueo se programan **una sola vez**.
+- El gerente puede atender citas y acompañar pruebas de manejo.
+
+### `sql/schema.sql`
+
+| Cambio | Detalle |
+|---|---|
+| `employees` + `managers` → **`staff`** | Mismas columnas más `role ENUM('Employee','Manager') NOT NULL DEFAULT 'Employee'`. `uq_staff_email` (correo único en todo el personal). `uq_staff_staff_id_role (staff_id, role)` como destino de las llaves compuestas |
+| **Tareas de empleado** (cualquier miembro del personal) | `appointments.employee_id`, `appointments.decision_by`, `test_drives.employee_id` y `trades.employee_id` → FK simple a `staff(staff_id)`. Conservan su nombre de columna |
+| **Tareas solo de gerente** (la base lo garantiza) | `trades.manager_id` y `stock_movements.manager_id` → **FK compuesta** `(manager_id, manager_role) → staff(staff_id, role)`. Se agregó la columna `manager_role` (mismo `ENUM`, `DEFAULT 'Manager'`) con un CHECK `manager_role = 'Manager'` (`chk_trades_manager_role`, `chk_stock_movements_manager_role`). Así la fila referenciada **tiene** que ser un gerente. En `trades`, mientras `manager_id` es NULL (sin decisión) la llave no se revisa |
+| Índices | `idx_trades_manager_id_role` e `idx_stock_movements_manager_id_role` (compuestos, los exige la FK) |
+| Totales | **12 tablas** (antes 13), 20 FK, **18 CHECK** (antes 16) |
+
+**Por qué una llave compuesta y no un CHECK:** un CHECK no puede leer el rol en otra tabla. Con la llave compuesta la regla queda en la base: aunque alguien inserte datos a mano, no puede poner a un empleado como aprobador.
+
+### `sql/seed.sql`, `checks.sql`, `queries.sql`
+
+- **seed:** `staff` = 1 Maria Lopez (**Manager**), 2 Ana Torres (Employee), 3 Luis Medina (Employee). Se reasignaron las referencias (Ana 1→2, Luis 2→3); los datos de la historia no cambian.
+- **checks:** los ids de los bloques existentes se ajustaron, y se agregaron 4 pruebas (todas verificadas):
+
+| # | Prueba | Resultado |
+|---|---|---|
+| 13 | Un empleado como aprobador (`UPDATE trades SET manager_id = 2`) | 1452 `… CONSTRAINT fk_trades_manager FOREIGN KEY (manager_id, manager_role) REFERENCES staff (staff_id, role)` |
+| 14 | Movimiento registrado por un empleado | 1452 `… fk_stock_movements_manager …` |
+| 15 | Mismo correo para dos miembros del personal | 1062 `… for key 'staff.uq_staff_email'` |
+| 16 | **Un gerente acompaña una prueba de manejo** | Pasa, con su limpieza |
+
+- **queries:** `JOIN staff` para el empleado y para el gerente que aprobó.
+
+### Backend
+
+| Archivo | Cambio |
+|---|---|
+| `controllers/userController.ts` → `loginUser` | Una sola consulta a `staff`. La API sigue mandando `role` en minúsculas (`'employee'` / `'manager'`), así que el frontend no cambia |
+| `repositories/testDrive.repository.ts` | Quien acompaña puede ser cualquier miembro de `staff`; la lista de próximas pruebas hace `JOIN staff` |
+| `services/testDrive.service.ts` | `"employee-not-found"` → `"staff-not-found"`, con mensaje 404 `"Staff member not found"` |
+| `tests/testDrives.test.ts` | Mensaje actualizado |
+
+### Frontend
+
+`pages/employee-test-drives`: se quitó la restricción para gerentes. Ahora **también pueden programar pruebas de manejo**. La prueba "manager sin formulario" se cambió por "un gerente programa y se envía su id".
+
+### Base de datos local
+
+Se **recargó** `carweb` con el esquema y el seed nuevos. Antes de borrarla se verificó que solo tuviera los datos del seed (5 citas, 2 operaciones, 1 prueba de manejo).
+
+### Verificación
+
+- Base temporal: `schema.sql` y `seed.sql` cargan; los 16 bloques de `checks.sql` dan el resultado documentado; `queries.sql` devuelve "aprobó Maria Lopez".
+- Backend: `tsc` sin errores; `npm test` → 49 pruebas. Frontend: `ng build` sin errores; `ng test` → 54 pruebas.
+- Contra MySQL real: login de Maria → `role: manager`, de Ana y de `LUIS.MEDINA@…` (mayúsculas) → `role: employee`. La **gerente (id 1) programó una prueba de manejo** → 201, y aparece en "próximas" acompañada por Maria Lopez. `employeeId: 99` → 404 "Staff member not found". Los datos temporales se borraron.
+
+### Relaciones (actualizadas)
+
+| Relación | Cardinalidad | Columna |
+|---|---|---|
+| Staff (Manager) **records** StockMovements | 1 : N | `stock_movements.manager_id` (+ `manager_role`) |
+| Staff **is assigned to** / **decides** Appointments | 1 : N (opcional) | `appointments.employee_id` / `decision_by` |
+| Staff **accompanies** TestDrives | 1 : N | `test_drives.employee_id` |
+| Staff **is responsible for** Trades | 1 : N | `trades.employee_id` |
+| Staff (Manager) **approves or rejects** Trades | 1 : N (opcional) | `trades.manager_id` (+ `manager_role`) |
+
+Las demás relaciones no cambian (ver la entrada "Nueva base de datos `carweb`").
+
+### Pendiente
+
+- **Diagrama entidad-relación** (`Documentation/Entity-relationship_model/CarWebER.png`): está desactualizado. Tiene `Employee` y `Client` con contraseña; ahora son `Staff` (con rol) y los datos del cliente viven en `Appointment`.
+
+---
+
+**Corrección en README.md:** "crea la base y las 13 tablas" → "las 12 tablas".
+
+---
+
+## 2026-11-09 — Prompt para el diagrama ER (Dia) y el diccionario de datos (Word)
+
+**Ubicación:** `Documentation/Prompt_ER_y_Diccionario.md`
+
+### Qué se hizo
+
+Se escribió un prompt listo para pegar en un asistente de IA (junto con `CarWebCode/sql/schema.sql`) que genera:
+
+1. `CarWebER.dia`: diagrama entidad-relación en notación Chen con la hoja "ER" de Dia (entidades, atributos, rombos y cardinalidades).
+2. `CarWeb_Diccionario_de_Datos.docx`: diccionario de datos con una sección por tabla (campos, tipos, nulos, llaves, valores por defecto, ENUM/CHECK, descripción), sus restricciones, el resumen de relaciones y las reglas de negocio.
+
+### Para qué sirve
+
+Para reemplazar el diagrama `Entity-relationship_model/CarWebER.png`, que está desactualizado (pendiente de la entrada anterior), y tener el diccionario de datos que pide la documentación del proyecto.
+
+### Por qué así
+
+- El prompt ya trae las **20 llaves foráneas** con su verbo y cardinalidad (las mismas de esta bitácora), para que la IA no tenga que deducirlas y no invente relaciones.
+- Se pide `.dia` en XML sin comprimir porque Dia lo abre sin problema y una IA lo puede escribir como texto.
+- Se omiten `created_at`/`updated_at` en el diagrama (están en todas las tablas y lo saturan), pero sí van en el diccionario.
+- Nombres técnicos en inglés (como en el código) y descripciones en español (como el resto de la documentación).

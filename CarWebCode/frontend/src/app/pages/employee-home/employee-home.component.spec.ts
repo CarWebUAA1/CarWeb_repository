@@ -25,9 +25,12 @@ describe('EmployeeHomeComponent', () => {
     expect(el.querySelector('.employee-header__name')?.textContent).toContain('Ana');
   });
 
-  it('lists the employee tasks as placeholders', () => {
+  it('lists the employee tasks; only Test drives is available so far', () => {
     expect(el.querySelectorAll('.task').length).toBe(7);
-    expect(el.querySelectorAll('.task__badge')[0]?.textContent).toContain('Coming soon');
+    expect(el.querySelectorAll('.task__badge').length).toBe(6);
+    const link = el.querySelector<HTMLAnchorElement>('a.task--link');
+    expect(link?.textContent).toContain('Test drives');
+    expect(link?.getAttribute('href')).toBe('/employee/test-drives');
   });
 
   it('logs out and goes back to the login', () => {

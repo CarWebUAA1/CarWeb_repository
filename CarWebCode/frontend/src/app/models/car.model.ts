@@ -27,8 +27,8 @@ export interface CarDetail {
   fuelType: string | null;
   transmission: string | null;
   color: string;
-  tireCondition: string;
-  price: number;
+  tireCondition: string | null;
+  price: number | null; // null when the car has no sale price yet
   status: string;
   isAvailable: boolean;
   photos: CarPhoto[];

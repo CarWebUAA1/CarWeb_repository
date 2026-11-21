@@ -19,12 +19,6 @@ export const routes: Routes = [
       import('./pages/car-detail/car-detail.component').then((m) => m.CarDetailComponent),
   },
   {
-    path: 'register',
-    title: 'Sign up | CarWeb',
-    loadComponent: () =>
-      import('./pages/register/register.component').then((m) => m.RegisterComponent),
-  },
-  {
     path: 'login',
     title: 'Log in | CarWeb',
     loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
@@ -34,6 +28,12 @@ export const routes: Routes = [
     title: 'Employee portal | CarWeb',
     canActivate: [employeeGuard],
     loadComponent: () => import('./pages/employee-home/employee-home.component'),
+  },
+  {
+    path: 'employee/test-drives',
+    title: 'Test drives | CarWeb',
+    canActivate: [employeeGuard],
+    loadComponent: () => import('./pages/employee-test-drives/employee-test-drives.component'),
   },
   { path: '**', redirectTo: '' },
 ];

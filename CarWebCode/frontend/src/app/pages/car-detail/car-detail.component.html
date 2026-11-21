@@ -41,7 +41,11 @@
 
         <section class="info">
           <h1 class="info__title">{{ c.brand }} {{ c.model }} {{ c.year }}</h1>
-          <p class="info__price">{{ c.price | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</p>
+          @if (c.price !== null) {
+            <p class="info__price">{{ c.price | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</p>
+          } @else {
+            <p class="info__price info__price--none">Price not available</p>
+          }
 
           <div class="info__actions">
             <app-button [disabled]="true">Schedule appointment</app-button>
@@ -59,7 +63,7 @@
             <dt>Fuel type</dt><dd>{{ c.fuelType ?? '—' }}</dd>
             <dt>Transmission</dt><dd>{{ c.transmission ?? '—' }}</dd>
             <dt>Color</dt><dd>{{ c.color }}</dd>
-            <dt>Tire condition</dt><dd>{{ c.tireCondition }}</dd>
+            <dt>Tire condition</dt><dd>{{ c.tireCondition ?? '—' }}</dd>
           </dl>
         </section>
       </div>

@@ -76,6 +76,12 @@ describe('CarDetailComponent', () => {
     expect(el.textContent).toContain("We couldn't find this car");
   });
 
+  it('shows "Price not available" and a dash when price and tire condition are missing', async () => {
+    const el = await render(car({ price: null, tireCondition: null }));
+    expect(el.querySelector('.info__price--none')?.textContent).toContain('Price not available');
+    expect(el.querySelector('.specs')?.textContent).toContain('Tire condition—');
+  });
+
   it('uses the placeholder when the car has no photos', async () => {
     const el = await render(car({ photos: [] }));
     const main = el.querySelector<HTMLImageElement>('.gallery__main');
