@@ -14,6 +14,10 @@ import { TestDriveController } from "../controllers/testDrive.controller.js";
 import { MySqlTestDriveRepository } from "../repositories/testDrive.repository.js";
 import { TestDriveService } from "../services/testDrive.service.js";
 import { createTestDriveRouter } from "./testDrive.routes.js";
+import { AppointmentController } from "../controllers/appointment.controller.js";
+import { MySqlAppointmentRepository } from "../repositories/appointment.repository.js";
+import { AppointmentService } from "../services/appointment.service.js";
+import { createAppointmentRouter } from "./appointment.routes.js";
 
 export class AppRoutes {
     static get router(): Router {
@@ -28,6 +32,15 @@ export class AppRoutes {
         router.use("/cars", createCarRouter(catalogController));
 
         router.use("/users", usersRoutes);
+
+        // Customer appointment requests.
+        const appointmentController = new AppointmentController(
+          new AppointmentService(
+           new MySqlAppointmentRepository(pool)
+          )
+        );
+
+        router.use("/appointments", createAppointmentRouter(appointmentController));
 
         // Test drive scheduling, rejecting overlapping schedules for the same car.
         const testDriveController = new TestDriveController(new TestDriveService(new MySqlTestDriveRepository(pool)));
