@@ -14,6 +14,9 @@ import { TestDriveController } from "../controllers/testDrive.controller.js";
 import { MySqlTestDriveRepository } from "../repositories/testDrive.repository.js";
 import { TestDriveService } from "../services/testDrive.service.js";
 import { createTestDriveRouter } from "./testDrive.routes.js";
+import { ManagerDataController } from "../controllers/managerData.controller.js";
+import { createManagerDataRouter } from "./managerData.routes.js";
+import type { RowDataPacket } from "mysql2";
 
 export class AppRoutes {
     static get router(): Router {
@@ -40,6 +43,12 @@ export class AppRoutes {
         );
 
         router.use("/spare-parts", createSparePartRouter(sparePartController));
+
+        const managerDataController = new ManagerDataController(async (sql) => {
+            const [rows] = await pool.execute<RowDataPacket[]>(sql);
+            return rows;
+        });
+        router.use("/manager/data", createManagerDataRouter(managerDataController));
         
         return router;
     }

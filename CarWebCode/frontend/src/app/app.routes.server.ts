@@ -17,11 +17,11 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
-    path: 'employee/test-drives',
+    path: 'manager',
     renderMode: RenderMode.Client
   },
   {
-    path: 'manager',
+    path: 'manager/data/:table',
     renderMode: RenderMode.Client
   },
   {

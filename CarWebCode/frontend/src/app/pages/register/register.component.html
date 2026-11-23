@@ -1,0 +1,61 @@
+<main class="auth-card">
+  <a class="brand" routerLink="/" aria-label="CarWeb home">
+    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+  </a>
+  <h1>Create an Account</h1>
+  <p class="subtitle">Welcome to CarWeb</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <label for="name">Full Name</label>
+    <input
+      type="text"
+      id="name"
+      formControlName="name"
+      maxlength="150"
+      placeholder="John Smith"
+      autocomplete="name"
+    />
+
+    <label for="phone">Phone Number</label>
+    <input
+      type="tel"
+      id="phone"
+      formControlName="phone"
+      maxlength="20"
+      placeholder="1234567890"
+      autocomplete="tel"
+    />
+
+    <label for="email">Email</label>
+    <input
+      type="email"
+      id="email"
+      formControlName="email"
+      maxlength="150"
+      placeholder="example@gmail.com"
+      autocomplete="email"
+    />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" formControlName="password" autocomplete="new-password" />
+    <small class="hint">At least 8 characters.</small>
+
+    <label for="confirmPassword">Confirm Password</label>
+    <input
+      type="password"
+      id="confirmPassword"
+      formControlName="confirmPassword"
+      autocomplete="new-password"
+    />
+
+    <button type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Registering…' : 'Register' }}
+    </button>
+  </form>
+
+  <p class="message" [class]="message()?.type" role="status" aria-live="polite">
+    {{ message()?.text }}
+  </p>
+
+  <p class="switch">Already have an account? <a routerLink="/login">Log in</a></p>
+</main>

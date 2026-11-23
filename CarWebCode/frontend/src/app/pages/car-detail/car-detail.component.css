@@ -81,11 +81,6 @@
   color: var(--color-primary);
 }
 
-.info__price--none {
-  font-size: 1.25rem;
-  color: var(--color-text-muted);
-}
-
 .info__actions {
   display: flex;
   gap: 0.75rem;

@@ -1,0 +1,42 @@
+<header class="table-header">
+  <a class="table-header__back" routerLink="/manager">← Manager home</a>
+  <span class="table-header__label">Manager portal</span>
+</header>
+
+<main class="table-page">
+  <h1>{{ tableTitle() }}</h1>
+
+  @if (loading()) {
+    <p class="table-page__message">Loading records…</p>
+  } @else if (error()) {
+    <p class="table-page__message table-page__message--error" role="alert">{{ error() }}</p>
+  } @else if (tableData(); as data) {
+    <p class="table-page__count">{{ data.rows.length }} records</p>
+    @if (data.rows.length === 0) {
+      <p class="table-page__message">There are no records in this table.</p>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              @for (column of data.columns; track column) {
+                <th scope="col">{{ formatColumn(column) }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of data.rows; track $index) {
+              <tr>
+                @for (column of data.columns; track column) {
+                  <td>{{ formatValue(row[column]) }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</main>
+
+<app-site-footer />

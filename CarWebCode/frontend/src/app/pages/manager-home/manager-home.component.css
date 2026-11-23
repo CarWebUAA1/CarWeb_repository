@@ -73,6 +73,12 @@
   color: var(--color-text-muted);
 }
 
+.manager-home__section-title {
+  margin: 2rem 0 1rem;
+  color: var(--color-graphite);
+  font-size: 1.25rem;
+}
+
 .tasks {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
