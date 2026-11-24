@@ -168,5 +168,24 @@ public async deleteCar(req: Request, res: Response){
         console.error(error);
         res.status(500).json({ message: "internal server error"});
     }
-  }
+}
+
+
+public async filterCars(req: Request, res: Response) {
+    try {
+      const brand = String(req.query.brand ?? "");
+      const model = String(req.query.model ?? "");
+      const [cars] = await pool.execute<RowDataPacket[]>(
+        "select car_id, brand, model, year, version, mileage, color, sale_price, photos from cars where status = 'Available' and inventory_status = 'In stock' and sale_price is not null and (? = '' or brand = ?) and (? = '' or model = ?)",
+        [brand, brand, model, model],
+      );
+      if (!cars[0]) {
+        res.status(404).json({ message: "No cars match your search" });
+        return;
+      }
+      res.json(cars);
+    } catch {
+      res.status(500).json({ message: "internal server error" });
+        }
+    }
 }
