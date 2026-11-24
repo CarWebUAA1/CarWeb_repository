@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { SiteFooterComponent } from '../../components/site-footer/site-footer.component';
 import { AuthService } from '../../services/auth.service';
+import { MANAGER_TABLES } from '../../models/manager-data.model';
 
 interface ManagerTask {
   title: string;
@@ -30,7 +31,10 @@ export default class ManagerHomeComponent {
     { title: 'Contracts', description: 'Generate the contract of an operation.', icon: 'fa-file-signature' },
     { title: 'Spare parts catalog', description: 'Search spare parts and manage their stock.', icon: 'fa-gears', route: '/spare-parts' },
     { title: 'Register a spare part', description: 'Add a spare part to the inventory.', icon: 'fa-circle-plus', route: '/spare-parts/register' },
+    { title: 'Staff', description: 'View, search, register, and update staff accounts.', icon: 'fa-users', route: '/manager/staff' },
   ];
+
+  protected readonly databaseTables = MANAGER_TABLES;
 
   logout(): void {
     this.auth.logout();

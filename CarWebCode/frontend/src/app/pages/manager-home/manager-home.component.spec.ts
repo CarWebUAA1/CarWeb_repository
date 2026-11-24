@@ -27,7 +27,26 @@ describe('ManagerHomeComponent', () => {
     const sparePartsLinks = Array.from(el.querySelectorAll<HTMLAnchorElement>('.task__link'));
     const catalogLink = sparePartsLinks.find((link) => link.getAttribute('href') === '/spare-parts');
     const registrationLink = sparePartsLinks.find((link) => link.getAttribute('href') === '/spare-parts/register');
+    const staffLink = sparePartsLinks.find((link) => link.getAttribute('href') === '/manager/staff');
     expect(catalogLink?.textContent).toContain('Spare parts catalog');
     expect(registrationLink?.textContent).toContain('Register a spare part');
+    expect(staffLink?.textContent).toContain('Staff');
+    expect(staffLink?.textContent).toContain('Manage staff');
+  });
+
+  it('links to every additional database table without duplicating existing catalog cards', () => {
+    const tableLinks = Array.from(el.querySelectorAll<HTMLAnchorElement>('.task__link'))
+      .filter((link) => link.getAttribute('href')?.startsWith('/manager/data/'));
+
+    expect(tableLinks.map((link) => link.getAttribute('href'))).toEqual([
+      '/manager/data/stock-movements',
+      '/manager/data/appointments',
+      '/manager/data/test-drives',
+      '/manager/data/inspections',
+      '/manager/data/trades',
+      '/manager/data/documents',
+      '/manager/data/contracts',
+      '/manager/data/receipts',
+    ]);
   });
 });

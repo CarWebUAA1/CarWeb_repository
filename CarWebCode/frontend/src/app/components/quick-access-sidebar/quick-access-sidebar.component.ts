@@ -33,8 +33,9 @@ export class QuickAccessSidebarComponent {
   protected readonly links: QuickLink[] = [
     { label: 'Home', route: '/' },
     { label: 'Catalog', route: '/cars' },
-    { label: 'Employee access', route: '/employee' },
-    { label: 'Schedule an appointment' },
+    { label: 'Log in', route: '/login' },
+    { label: 'Sign up', route: '/register' },
+    { label: 'My appointments' },
     { label: 'Sell my car' },
     { label: 'Spare parts' },
   ];

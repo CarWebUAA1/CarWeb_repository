@@ -1,6 +1,19 @@
-// POST /api/v1/users/login (backend/src/controllers/userController.ts).
-// Only staff log in: customers have no account.
+// Mirrors the body and responses of POST /api/v1/users/register (backend/src/controllers/userController.ts).
 
+export interface RegisterUserRequest {
+  Name: string;
+  Phone: string;
+  Email: string;
+  Password: string;
+}
+
+export interface RegisterUserResponse {
+  ok: boolean;
+  message: string;
+  userId?: number;
+}
+
+// POST /api/v1/users/login
 export interface LoginRequest {
   email: string;
   password: string;
@@ -10,7 +23,7 @@ export interface LoggedUser {
   id: number;
   name: string;
   email: string;
-  role: string; // 'employee' | 'manager'
+  role: string;
 }
 
 export interface LoginResponse {
@@ -18,4 +31,29 @@ export interface LoginResponse {
   message: string;
   token: string;
   user?: LoggedUser;
+}
+
+export interface StaffMember {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  role: 'employee' | 'manager';
+}
+
+export interface StaffListResponse {
+  staff: StaffMember[];
+}
+
+export interface StaffDetailsRequest {
+  name: string;
+  phone: string;
+  email: string;
+  role: StaffMember['role'];
+  password?: string;
+}
+
+export interface StaffMutationResponse {
+  message: string;
+  staffId?: number;
 }
