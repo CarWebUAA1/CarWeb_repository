@@ -3,31 +3,26 @@
 ## Requisitos
 
 - [Node.js](https://nodejs.org/) 22 o superior (incluye npm)
-- MySQL 8, o [XAMPP](https://www.apachefriends.org/) (trae MariaDB, compatible)
-- [DBeaver](https://dbeaver.io/) o [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) para ejecutar los scripts SQL
+- **MySQL 8.0.16 o superior** (incluye 8.4 LTS). XAMPP/MariaDB **no** sirve: el esquema usa la collation `utf8mb4_0900_ai_ci`, que solo existe en MySQL 8
+- [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) o [DBeaver](https://dbeaver.io/) para ejecutar los scripts SQL
 
 ## 1. Base de datos
 
-1. Enciende el servidor:
-   - **XAMPP:** abre el XAMPP Control Panel y pulsa **Start** en **MySQL** (usuario `root`, sin contraseña).
-   - **MySQL Server:** ya corre como servicio de Windows (usuario `root` y la contraseña que pusiste al instalarlo).
-2. Conéctate a `localhost:3306` con el usuario `root`:
-   - **DBeaver:** Nueva conexión → **MySQL** (o MariaDB), con el campo *Database* vacío.
+1. Conéctate a `localhost:3306` con el usuario `root` (MySQL Server corre como servicio de Windows):
    - **Workbench:** usa la conexión *Local instance* o créala con el botón **+**.
-3. Crea la base (una sola vez):
-   ```sql
-   CREATE DATABASE IF NOT EXISTS CarWeb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   ```
-4. Ejecuta los scripts completos, en este orden:
-   1. `CarWebCode/sql/CarWeb.sql`: crea las tablas.
-   2. `CarWebCode/sql/seed_cars.sql`: carga autos de prueba.
+   - **DBeaver:** Nueva conexión → **MySQL**, con el campo *Database* vacío.
+2. Ejecuta los scripts completos, en este orden (el primero crea la base `carweb`):
+   1. `CarWebCode/sql/schema.sql`: crea la base y las 12 tablas.
+   2. `CarWebCode/sql/seed.sql`: carga datos de prueba. Los usuarios del personal entran con la contraseña de desarrollo `DevPassword123!` (por ejemplo, `ana.torres@carweb.test`).
 
    | Cliente | Abrir el script | Ejecutarlo completo |
    |---|---|---|
-   | DBeaver | Editor SQL → Abrir script SQL | **Alt + X** |
    | Workbench | File → Open SQL Script | **Ctrl + Shift + Enter** (o el rayo ⚡) |
+   | DBeaver | Editor SQL → Abrir script SQL | **Alt + X** |
 
    No uses **Ctrl + Enter**: en los dos clientes solo ejecuta una sentencia.
+
+   Si ya tenías la base vieja (`CarWeb`, con las tablas `Cars`, `User`…), respáldala y bórrala antes. En Windows `CarWeb` y `carweb` son la misma base, y `schema.sql` falla si encuentra tablas con el mismo nombre.
 
 ## 2. Backend (puerto 3000)
 
@@ -36,7 +31,7 @@ cd CarWebCode/backend
 npm install
 ```
 
-Copia `.env.example` a un archivo nuevo `.env` y pon tu contraseña de MySQL (con XAMPP, déjala vacía):
+Copia `.env.example` a un archivo nuevo `.env` y pon tu contraseña de MySQL:
 
 ```env
 PORT=3000
@@ -44,7 +39,7 @@ DB_USER=root
 DB_PORT=3306
 DB_HOST=localhost
 DB_PASSWORD=tu_contraseña
-DB_NAME=CarWeb
+DB_NAME=carweb
 ```
 
 Arranca el servidor:

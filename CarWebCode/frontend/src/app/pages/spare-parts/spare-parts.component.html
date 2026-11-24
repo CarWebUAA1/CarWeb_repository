@@ -1,0 +1,103 @@
+<app-site-header />
+
+<main class="page-container">
+
+  <section class="form-container">
+
+    <h1>Register Spare Parts</h1>
+
+    <p class="description">
+      Enter the information of the spare part.
+    </p>
+
+    <form
+      [formGroup]="sparePartForm"
+      (ngSubmit)="registerSparePart()"
+    >
+
+      <div class="form-group">
+        <label for="carId">Car ID (optional)</label>
+
+        <input
+          id="carId"
+          type="number"
+          formControlName="carId"
+          min="1"
+          placeholder="Enter the car ID"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="brand">Brand</label>
+
+        <input
+          id="brand"
+          type="text"
+          formControlName="brand"
+          maxlength="50"
+          placeholder="Enter the brand"
+        />
+
+        @if (
+          sparePartForm.controls.brand.touched &&
+          sparePartForm.controls.brand.invalid
+        ) {
+          <small class="field-error">
+            Brand is required and must have at most 50 characters.
+          </small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="model">Model</label>
+
+        <input
+          id="model"
+          type="text"
+          formControlName="model"
+          maxlength="50"
+          placeholder="Enter the model"
+        />
+
+        @if (
+          sparePartForm.controls.model.touched &&
+          sparePartForm.controls.model.invalid
+        ) {
+          <small class="field-error">
+            Model is required and must have at most 50 characters.
+          </small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="price">Price</label>
+
+        <input
+          id="price"
+          type="number"
+          formControlName="price"
+          min="0.01"
+          step="0.01"
+          placeholder="Enter the price"
+        />
+      </div>
+
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? "Registering..." : "Register Spare Part" }}
+      </button>
+
+      @if (message()) {
+        <p
+          class="message"
+          [class.success]="messageType() === 'success'"
+          [class.error]="messageType() === 'error'"
+        >
+          {{ message() }}
+        </p>
+      }
+
+    </form>
+
+  </section>
+
+</main>

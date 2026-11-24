@@ -18,6 +18,9 @@ export class AppointmentsController {
     // PATCH /appointments/:id/modify
     // Body: { "token": "token from the email link", "newDatetime": "2026-11-25 10:30" }
     public async modifyAppointment(req: Request, res: Response) {
+    // PATCH /appointments/:id/cancel
+    // Body: { "userId": 1, "confirm": true, "reason": "opcional" }
+    public async cancelAppointment(req: Request, res: Response) {
         const id = Number(req.params["id"]);
         if (!Number.isInteger(id) || id <= 0) {
             res.status(400).json({ message: "this id is not valid" });
@@ -141,6 +144,7 @@ export class AppointmentsController {
             console.error(error);
             res.status(500).json({ message: "internal server error" });
         } finally {
+            
             connection.release();
         }
     }

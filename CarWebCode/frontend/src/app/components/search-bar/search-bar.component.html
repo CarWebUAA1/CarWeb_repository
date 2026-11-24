@@ -1,5 +1,5 @@
 <form class="search-bar" role="search" (submit)="submit($event)">
-  <label class="visually-hidden" for="site-search">Search cars</label>
+  <label class="visually-hidden" for="site-search">{{ searchLabel() }}</label>
   <input
     id="site-search"
     class="search-bar__input"

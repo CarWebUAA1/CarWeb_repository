@@ -44,9 +44,14 @@
           <p class="info__price">{{ c.price | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</p>
 
           <div class="info__actions">
-            <app-button [disabled]="true">Schedule appointment</app-button>
-            <app-button [disabled]="true">Buy</app-button>
+         <app-button
+            [disabled]="!c.isAvailable"
+            (clicked)="openModal()"
+            >Schedule appointment
+            </app-button>
+        <app-button [disabled]="true">Buy</app-button>
           </div>
+
           <p class="info__hint">Scheduling an appointment and buying will be available soon.</p>
 
           <dl class="specs">
@@ -63,6 +68,23 @@
           </dl>
         </section>
       </div>
+
+      @if (appointmentModalOpen()) {
+         <app-appointment-modal
+
+          [car]="{
+          id: c.id,
+          brand: c.brand,
+          model: c.model,
+          year: c.year
+          }"
+        [isSubmitting]="appointmentSubmitting()"
+        (closed)="closeModal()"
+        (submitted)="submitAppointment($event)"
+
+          />
+}
+
     }
   } @else if (car.error()) {
     <div class="detail__status" role="alert">

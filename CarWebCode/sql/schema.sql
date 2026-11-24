@@ -33,9 +33,6 @@ CREATE TABLE staff (
   email            VARCHAR(255) NOT NULL,              -- unique across all staff
   password_hash    VARCHAR(255) NOT NULL,              -- bcrypt hash, never the password
   role             ENUM('Employee','Manager') NOT NULL DEFAULT 'Employee',
-  failed_attempts  TINYINT UNSIGNED NOT NULL DEFAULT 0, -- login lockout: 3 attempts
-  locked_until     DATETIME NULL,                      -- ...then locked for 15 minutes
-  last_activity    DATETIME NULL,                      -- session expires by inactivity
   created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT pk_staff PRIMARY KEY (staff_id),

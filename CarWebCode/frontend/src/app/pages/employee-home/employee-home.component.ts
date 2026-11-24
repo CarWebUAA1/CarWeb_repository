@@ -7,6 +7,7 @@ interface EmployeeTask {
   title: string;
   description: string;
   icon: string;
+  route?: string;
 }
 
 /** Home of the employee page. Reached only through the login (see employeeGuard). */
@@ -22,6 +23,7 @@ export default class EmployeeHomeComponent {
 
   // Placeholders for the employee user stories (Documentation/UserStories/Employee).
   protected readonly tasks: EmployeeTask[] = [
+    { title: 'My profile', description: 'Update your personal information and password.', icon: 'fa-user-pen', route: '/employee/profile' },
     { title: 'Appointments', description: 'Approve or reject appointments requested by customers.', icon: 'fa-calendar-check' },
     { title: 'Test drives', description: 'Manage and record test drive appointments.', icon: 'fa-car-side' },
     { title: 'Vehicle inspection', description: 'Inspect vehicles entering the agency.', icon: 'fa-clipboard-check' },
@@ -29,6 +31,7 @@ export default class EmployeeHomeComponent {
     { title: 'Register a sale', description: 'Record cars sold to customers.', icon: 'fa-handshake' },
     { title: 'Documents', description: 'Verify the documents required for each transaction.', icon: 'fa-folder-open' },
     { title: 'Contracts', description: 'Generate the contract of an operation.', icon: 'fa-file-signature' },
+    { title: 'Spare parts catalog', description: 'Search spare parts and record stock movements.', icon: 'fa-gears', route: '/spare-parts' },
   ];
 
   logout() {

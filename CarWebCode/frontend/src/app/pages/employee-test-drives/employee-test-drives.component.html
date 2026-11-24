@@ -1,0 +1,106 @@
+<app-employee-header />
+
+<main class="test-drives">
+  <a class="test-drives__back" routerLink="/employee">← Employee home</a>
+  <h1>Test drives</h1>
+
+  <section class="panel" aria-labelledby="schedule-title">
+    <h2 id="schedule-title">Schedule a test drive</h2>
+
+    @if (pending.isLoading()) {
+      <p class="panel__note">Loading appointments…</p>
+    } @else if (pending.error()) {
+      <p class="panel__note" role="alert">
+        We couldn't load the appointments.
+        <button type="button" class="link-button" (click)="pending.reload()">Try again</button>
+      </p>
+    } @else if (pending.value()?.length === 0) {
+      <p class="panel__note">There are no test drive appointments waiting to be scheduled.</p>
+    } @else {
+      <form class="schedule" (submit)="submit($event)">
+        <label for="appointment">Appointment</label>
+        <select id="appointment" (change)="selectAppointment($any($event.target).value)">
+          <option value="" [selected]="selectedId() === null">Choose an appointment</option>
+          @for (a of pending.value(); track a.appointmentId) {
+            <option [value]="a.appointmentId" [selected]="a.appointmentId === selectedId()">
+              {{ toDate(a.appointmentDatetime) | date: 'MMM d, h:mm a' }} · {{ a.clientName }} · {{ a.car ?? 'No car' }}
+            </option>
+          }
+        </select>
+
+        @if (selected(); as appointment) {
+          <p class="schedule__car">
+            <i class="fa-solid fa-car-side" aria-hidden="true"></i>
+            Car: <strong>{{ appointment.car ?? 'none assigned' }}</strong>
+          </p>
+
+          @if (appointment.carId === null) {
+            <p class="message error" role="alert">This appointment has no car assigned, so it cannot be scheduled.</p>
+          } @else {
+            <div class="schedule__times">
+              <div>
+                <label for="start">Start</label>
+                <input id="start" type="datetime-local" required [value]="start()" (input)="start.set($any($event.target).value)" />
+              </div>
+              <div>
+                <label for="end">End</label>
+                <input id="end" type="datetime-local" required [value]="end()" (input)="end.set($any($event.target).value)" />
+              </div>
+            </div>
+
+            <button type="submit" class="schedule__submit" [disabled]="submitting()">
+              {{ submitting() ? 'Scheduling…' : 'Schedule test drive' }}
+            </button>
+          }
+        }
+      </form>
+    }
+
+    @if (message(); as m) {
+      <p class="message" [class]="m.type" role="status" aria-live="polite">{{ m.text }}</p>
+    }
+  </section>
+
+  <section class="panel" aria-labelledby="upcoming-title">
+    <h2 id="upcoming-title">Upcoming test drives</h2>
+
+    @if (upcoming.isLoading()) {
+      <p class="panel__note">Loading test drives…</p>
+    } @else if (upcoming.error()) {
+      <p class="panel__note" role="alert">
+        We couldn't load the test drives.
+        <button type="button" class="link-button" (click)="upcoming.reload()">Try again</button>
+      </p>
+    } @else if (upcoming.value()?.length === 0) {
+      <p class="panel__note">There are no upcoming test drives.</p>
+    } @else {
+      <div class="table-wrapper">
+        <table class="upcoming">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Car</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Employee</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of upcoming.value(); track t.id) {
+              <tr>
+                <td>
+                  {{ toDate(t.scheduleStart) | date: 'MMM d, y, h:mm a' }} –
+                  {{ toDate(t.scheduleEnd) | date: 'h:mm a' }}
+                </td>
+                <td>{{ t.car }}</td>
+                <td>{{ t.clientName }}</td>
+                <td>{{ t.employeeName }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>
+
+<app-site-footer />

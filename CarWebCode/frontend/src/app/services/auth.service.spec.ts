@@ -20,10 +20,16 @@ describe('AuthService', () => {
   it('stores the user after a successful login', () => {
     const auth = create();
     auth.login({ email: 'ana@carweb.com', password: 'secret123' }).subscribe();
-    http.expectOne('/api/v1/users/login').flush({ ok: true, message: 'Login successful.', user: EMPLOYEE });
+    http.expectOne('/api/v1/users/login').flush({
+      ok: true,
+      message: 'Login successful.',
+      token: 'test-token',
+      user: EMPLOYEE,
+    });
     expect(auth.user()).toEqual(EMPLOYEE);
     expect(auth.isEmployee()).toBe(true);
     expect(JSON.parse(sessionStorage.getItem('carweb.user')!)).toEqual(EMPLOYEE);
+    expect(sessionStorage.getItem('carweb.token')).toBe('test-token');
   });
 
   it('restores the user saved in the tab (e.g. after a page reload)', () => {

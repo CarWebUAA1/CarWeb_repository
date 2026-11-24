@@ -1,0 +1,149 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.test-drives {
+  flex: 1;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  box-sizing: border-box;
+}
+
+.test-drives h1 {
+  margin: 0.75rem 0 1.25rem;
+}
+
+.panel {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.panel h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.panel__note {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.schedule {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 520px;
+}
+
+.schedule label {
+  font-weight: 600;
+}
+
+.schedule select,
+.schedule input {
+  width: 100%;
+  padding: 0.6rem;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.schedule__car {
+  margin: 0.5rem 0 0;
+}
+
+.schedule__car i {
+  color: var(--color-primary);
+}
+
+.schedule__times {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.schedule__times label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.schedule__submit {
+  justify-self: start;
+  margin-top: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--color-primary);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.schedule__submit:hover {
+  background: var(--color-primary-hover);
+}
+
+.schedule__submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.message {
+  margin: 1rem 0 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.message.success {
+  background: var(--color-slate-light);
+  color: var(--color-ash-deep);
+}
+
+.message.error {
+  background: var(--color-inferno-tint);
+  color: var(--color-inferno-dark);
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.upcoming {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.upcoming th,
+.upcoming td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--color-slate-light);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.upcoming th {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}

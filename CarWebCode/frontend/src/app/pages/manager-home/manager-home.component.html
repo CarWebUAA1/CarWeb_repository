@@ -1,0 +1,63 @@
+<header class="manager-header">
+  <a class="manager-header__brand" routerLink="/manager" aria-label="Manager home">
+    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+  </a>
+  <span class="manager-header__badge">
+    <i class="fa-solid fa-user-tie" aria-hidden="true"></i> Manager portal
+  </span>
+  <div class="manager-header__user">
+    <span class="manager-header__name">{{ auth.user()?.name }}</span>
+    <button type="button" class="manager-header__logout" (click)="logout()">
+      <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Log out
+    </button>
+  </div>
+</header>
+
+<main class="manager-home">
+  <h1>Welcome, {{ auth.user()?.name }}</h1>
+  <p class="manager-home__intro">Choose a task to get started.</p>
+
+  <ul class="tasks">
+    @for (task of tasks; track task.title) {
+      <li class="task" [class.task--link]="!!task.route">
+        @if (task.route) {
+          <a class="task__link" [routerLink]="task.route">
+            <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
+            <h2 class="task__title">{{ task.title }}</h2>
+            <p class="task__description">{{ task.description }}</p>
+            <span class="task__action">
+              {{
+                task.route === '/spare-parts/register'
+                  ? 'Register spare part'
+                  : task.route === '/manager/staff'
+                    ? 'Manage staff'
+                    : 'Browse catalog'
+              }}
+            </span>
+          </a>
+        } @else {
+          <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
+          <h2 class="task__title">{{ task.title }}</h2>
+          <p class="task__description">{{ task.description }}</p>
+          <span class="task__badge">Coming soon</span>
+        }
+      </li>
+    }
+  </ul>
+
+  <h2 class="manager-home__section-title">Database records</h2>
+  <ul class="tasks">
+    @for (table of databaseTables; track table.key) {
+      <li class="task task--link">
+        <a class="task__link" [routerLink]="['/manager/data', table.key]">
+          <i class="fa-solid task__icon" [class]="table.icon" aria-hidden="true"></i>
+          <h2 class="task__title">{{ table.title }}</h2>
+          <p class="task__description">{{ table.description }}</p>
+          <span class="task__action">View records</span>
+        </a>
+      </li>
+    }
+  </ul>
+</main>
+
+<app-site-footer />

@@ -35,4 +35,11 @@ describe('SearchBarComponent', () => {
     const input = el.querySelector('input')!;
     expect(el.querySelector(`label[for="${input.id}"]`)?.textContent).toContain('Search cars');
   });
+
+  it('uses the spare parts label when supplied by the catalog header', () => {
+    fixture.componentRef.setInput('searchLabel', 'Search spare parts');
+    fixture.detectChanges();
+    const input = el.querySelector('input')!;
+    expect(el.querySelector(`label[for="${input.id}"]`)?.textContent).toContain('Search spare parts');
+  });
 });
