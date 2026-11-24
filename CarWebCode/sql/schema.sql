@@ -419,6 +419,26 @@ CREATE TRIGGER trg_stock_movements_no_delete
 
 
 -- ---------------------------------------------------------------------
+-- trade_logs: what customers did with their trades (sale offers and
+-- listing price changes). Customers have no account (no ClientId), so
+-- they are identified by client_email, like in appointments.
+-- log_date is filled by MySQL with its local date and time.
+-- ---------------------------------------------------------------------
+CREATE TABLE trade_logs (
+  log_id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  log_date         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  client_email     VARCHAR(255) NOT NULL,
+  trade_id         INT UNSIGNED NOT NULL,
+  action           ENUM('Sale offer created','Listing price changed') NOT NULL,
+  estimated_price  DECIMAL(12,2) NULL,
+  previous_price   DECIMAL(12,2) NULL,
+  new_price        DECIMAL(12,2) NULL,
+  CONSTRAINT pk_trade_logs PRIMARY KEY (log_id),
+  CONSTRAINT fk_trade_logs_trade FOREIGN KEY (trade_id) REFERENCES trades (trade_id)
+    ON DELETE RESTRICT ON UPDATE RESTRICT,
+  INDEX idx_trade_logs_trade_id (trade_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
+  COMMENT = 'Log of sale offers and listing price changes made by customers';
 -- appointment_logs: what customers did with their appointments.
 -- Customers have no account (no ClientId), so they are identified by
 -- client_email, the same way appointments identifies them.
