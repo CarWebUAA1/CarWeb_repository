@@ -1,0 +1,106 @@
+
+<div class="appointment-overlay">
+  <section
+    class="appointment-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="appointment-title"
+  >
+
+    <button
+      type="button"
+      (click)="closeModal()"
+      aria-label="Close"
+    >
+      ×
+    </button>
+
+    <h2 id="appointment-title">Schedule an appointment</h2>
+
+    <p>
+      {{ car().brand }} {{ car().model }} {{ car().year }}
+    </p>
+
+    <form [formGroup]="appointmentForm" (ngSubmit)="submitAppointment()">
+
+      <label for="clientName">Full name</label>
+      <input
+        id="clientName"
+        type="text"
+        formControlName="clientName"
+        placeholder="Your full name"
+      />
+
+      @if (appointmentForm.controls.clientName.touched &&
+           appointmentForm.controls.clientName.invalid) {
+        <p>Please enter your name (maximum 100 characters).</p>
+      }
+
+      <label for="clientPhone">Phone number</label>
+      <input
+        id="clientPhone"
+        type="tel"
+        formControlName="clientPhone"
+        placeholder="Your phone number"
+      />
+
+      @if (appointmentForm.controls.clientPhone.touched &&
+           appointmentForm.controls.clientPhone.invalid) {
+        <p>Please enter a valid phone number.</p>
+      }
+
+      <label for="clientEmail">Email</label>
+      <input
+        id="clientEmail"
+        type="email"
+        formControlName="clientEmail"
+        placeholder="your@email.com"
+      />
+
+      @if (appointmentForm.controls.clientEmail.touched &&
+           appointmentForm.controls.clientEmail.invalid) {
+        <p>Please enter a valid email address.</p>
+      }
+
+      <label for="appointmentType">Appointment type</label>
+      <select id="appointmentType" formControlName="appointmentType">
+        <option value="Viewing">Viewing</option>
+        <option value="Test drive">Test drive</option>
+        <option value="Purchase">Purchase</option>
+      </select>
+
+      <label for="appointmentDatetime">Date and time</label>
+      <input
+        id="appointmentDatetime"
+        type="datetime-local"
+        [min]="minDateTime"
+        [max]="maxDateTime"
+        formControlName="appointmentDatetime"
+      />
+      @if (appointmentForm.controls.appointmentDatetime.hasError('pastDate')) {
+        <p>Please select a future date and time.</p>
+      }
+
+      @if (appointmentForm.controls.appointmentDatetime.touched &&
+           appointmentForm.controls.appointmentDatetime.invalid) {
+        <p>Please select a date and time.</p>
+      }
+      @if (appointmentForm.controls.appointmentDatetime.hasError('maxDate')) {
+        <p>Appointments can only be scheduled within the next 30 days.</p>
+      }
+
+      @if (appointmentForm.controls.appointmentDatetime.hasError('businessHours')) {
+        <p>Available hours: Monday to Friday, 9 AM to 5 PM. Saturday, 9 AM to 3 PM. Sunday is closed.</p>
+      }
+
+      <button type="button" (click)="closeModal()">
+        Cancel
+      </button>
+
+      <button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Submitting...' : 'Submit appointment' }}
+      </button>
+
+    </form>
+  </section>
+</div>

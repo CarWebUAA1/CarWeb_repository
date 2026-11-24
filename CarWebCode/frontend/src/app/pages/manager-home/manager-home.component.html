@@ -26,7 +26,13 @@
             <h2 class="task__title">{{ task.title }}</h2>
             <p class="task__description">{{ task.description }}</p>
             <span class="task__action">
-              {{ task.route === '/spare-parts/register' ? 'Register spare part' : 'Browse catalog' }}
+              {{
+                task.route === '/spare-parts/register'
+                  ? 'Register spare part'
+                  : task.route === '/manager/staff'
+                    ? 'Manage staff'
+                    : 'Browse catalog'
+              }}
             </span>
           </a>
         } @else {
@@ -35,6 +41,20 @@
           <p class="task__description">{{ task.description }}</p>
           <span class="task__badge">Coming soon</span>
         }
+      </li>
+    }
+  </ul>
+
+  <h2 class="manager-home__section-title">Database records</h2>
+  <ul class="tasks">
+    @for (table of databaseTables; track table.key) {
+      <li class="task task--link">
+        <a class="task__link" [routerLink]="['/manager/data', table.key]">
+          <i class="fa-solid task__icon" [class]="table.icon" aria-hidden="true"></i>
+          <h2 class="task__title">{{ table.title }}</h2>
+          <p class="task__description">{{ table.description }}</p>
+          <span class="task__action">View records</span>
+        </a>
       </li>
     }
   </ul>

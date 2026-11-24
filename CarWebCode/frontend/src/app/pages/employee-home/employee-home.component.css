@@ -4,6 +4,57 @@
   min-height: 100dvh;
 }
 
+.employee-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border-bottom: 3px solid var(--color-primary);
+}
+
+.employee-header__brand img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.employee-header__badge {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--color-graphite);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.employee-header__user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.employee-header__name {
+  font-weight: 600;
+}
+
+.employee-header__logout {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.employee-header__logout:hover {
+  background: var(--color-inferno-tint);
+}
+
 .employee-home {
   flex: 1;
   width: 100%;
@@ -32,13 +83,26 @@
 }
 
 .task {
-  display: block;
-  height: 100%;
-  box-sizing: border-box;
   padding: 1.25rem;
   border-radius: 0.75rem;
   background: var(--color-surface);
   box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.task__link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.task__action {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.75rem;
 }
 
 .task__icon {
@@ -63,23 +127,4 @@
   background: var(--color-slate-light);
   color: var(--color-text-muted);
   font-size: 0.75rem;
-}
-
-.task--link {
-  color: inherit;
-  text-decoration: none;
-  border: 1px solid transparent;
-  transition: border-color 0.15s ease, transform 0.15s ease;
-}
-
-.task--link:hover,
-.task--link:focus-visible {
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-}
-
-.task__open {
-  color: var(--color-primary);
-  font-size: 0.85rem;
-  font-weight: 600;
 }

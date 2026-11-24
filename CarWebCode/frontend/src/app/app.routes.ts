@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { employeeGuard } from './guards/employee.guard';
+import { SparePartsComponent } from "./pages/spare-parts/spare-parts.component";
 import { managerGuard } from './guards/manager.guard';
 
 export const routes: Routes = [
@@ -20,6 +21,12 @@ export const routes: Routes = [
       import('./pages/car-detail/car-detail.component').then((m) => m.CarDetailComponent),
   },
   {
+    path: 'register',
+    title: 'Sign up | CarWeb',
+    loadComponent: () =>
+      import('./pages/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
     path: 'login',
     title: 'Log in | CarWeb',
     loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
@@ -31,16 +38,32 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/employee-home/employee-home.component'),
   },
   {
-    path: 'employee/test-drives',
-    title: 'Test drives | CarWeb',
+    path: 'employee/profile',
+    title: 'My profile | CarWeb',
     canActivate: [employeeGuard],
-    loadComponent: () => import('./pages/employee-test-drives/employee-test-drives.component'),
+    loadComponent: () => import('./pages/employee-profile/employee-profile.component')
+      .then((m) => m.EmployeeProfileComponent),
   },
   {
     path: 'manager',
     title: 'Manager portal | CarWeb',
     canActivate: [managerGuard],
     loadComponent: () => import('./pages/manager-home/manager-home.component'),
+  },
+  {
+    path: 'manager/staff',
+    title: 'Staff management | CarWeb',
+    canActivate: [managerGuard],
+    loadComponent: () => import('./pages/staff-management/staff-management.component')
+      .then((m) => m.StaffManagementComponent),
+  },
+  {
+    path: 'manager/data/:table',
+    title: 'Database records | CarWeb',
+    canActivate: [managerGuard],
+    loadComponent: () =>
+      import('./pages/manager-table/manager-table.component')
+        .then((m) => m.ManagerTableComponent),
   },
   {
     path: 'spare-parts',
