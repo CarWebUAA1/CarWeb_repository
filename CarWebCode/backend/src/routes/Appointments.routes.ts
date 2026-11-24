@@ -4,6 +4,7 @@ import { AppointmentsController } from "../controllers/appointments.controller.t
 const router = Router();
 const appointmentsController = new AppointmentsController();
 
-router.patch('/:id/cancel', appointmentsController.cancelAppointment);
+
+router.patch('/:id/modify', appointmentsController.modifyAppointment);
 
 export default router;

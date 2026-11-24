@@ -14,6 +14,7 @@ import { TestDriveController } from "../controllers/testDrive.controller.js";
 import { MySqlTestDriveRepository } from "../repositories/testDrive.repository.js";
 import { TestDriveService } from "../services/testDrive.service.js";
 import { createTestDriveRouter } from "./testDrive.routes.js";
+import AppointmentsRoutes from "./Appointments.routes.js";
 import { AppointmentController } from "../controllers/appointment.controller.js";
 import { MySqlAppointmentRepository } from "../repositories/appointment.repository.js";
 import { AppointmentService } from "../services/appointment.service.js";
@@ -64,5 +65,7 @@ export class AppRoutes {
         router.use("/manager/data", createManagerDataRouter(managerDataController));
         
         return router;
+
+        router.use("/appointments", AppointmentsRoutes);
     }
 }
