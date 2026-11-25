@@ -4,7 +4,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { EmployeeHeaderComponent } from '../../components/employee-header/employee-header.component';
+import { PortalHeaderComponent } from '../../components/portal-header/portal-header.component';
 import { SiteFooterComponent } from '../../components/site-footer/site-footer.component';
 import { AuthService } from '../../services/auth.service';
 import { TestDriveService } from '../../services/test-drive.service';
@@ -20,9 +20,9 @@ interface FormMessage {
 /** Employee page to schedule test drives (Manage test drive appointments). */
 @Component({
   selector: 'app-employee-test-drives',
-  imports: [DatePipe, RouterLink, EmployeeHeaderComponent, SiteFooterComponent],
+  imports: [DatePipe, RouterLink, PortalHeaderComponent, SiteFooterComponent],
   templateUrl: './employee-test-drives.component.html',
-  styleUrl: './employee-test-drives.component.css',
+  host: { class: 'flex min-h-dvh flex-col' },
 })
 export default class EmployeeTestDrivesComponent {
   private readonly testDrives = inject(TestDriveService);

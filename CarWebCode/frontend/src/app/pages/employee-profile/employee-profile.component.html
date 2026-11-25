@@ -1,25 +1,35 @@
-<header class="profile-header">
-  <a routerLink="/employee" aria-label="Employee home">
+<header
+  class="flex justify-between border-b-3 border-primary bg-white px-[max(1rem,calc((100%-800px)/2))] py-4 font-bold"
+>
+  <a class="text-text-muted no-underline" routerLink="/employee" aria-label="Employee home">
     <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Employee portal
   </a>
   <span>My profile</span>
 </header>
 
-<main class="profile-page">
-  <section class="profile-card">
-    <p class="eyebrow">Personal information</p>
-    <h1>My profile</h1>
+<main class="mx-auto w-[min(800px,calc(100%-2rem))] py-10">
+  <section class="rounded-[0.85rem] bg-white p-8 shadow-[0_2px_12px_rgb(0_0_0/8%)]">
+    <p class="m-0 text-[0.75rem] font-bold text-primary uppercase">Personal information</p>
+    <h1 class="mx-0 mt-[0.35rem] mb-6">My profile</h1>
 
     @if (loading()) {
       <p>Loading your profile...</p>
     } @else {
       @if (message()) {
-        <p class="notice" [class.notice--error]="messageType() === 'error'" role="status">
+        <p
+          class="rounded-[0.55rem] bg-[#edf8ef] px-4 py-[0.8rem] text-[#315d3b] data-[type=error]:bg-[#fff0ef] data-[type=error]:text-primary"
+          [attr.data-type]="messageType()"
+          role="status"
+        >
           {{ message() }}
         </p>
       }
 
-      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+      <form
+        class="grid gap-4 [&_input]:box-border [&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-border-strong [&_input]:p-3 [&_input]:focus:outline-2 [&_input]:focus:outline-offset-2 [&_input]:focus:outline-primary [&_label]:grid [&_label]:gap-[0.4rem] [&_label]:font-[650]"
+        [formGroup]="profileForm"
+        (ngSubmit)="saveProfile()"
+      >
         <label>
           Full name
           <input type="text" formControlName="name" autocomplete="name" />
@@ -34,15 +44,28 @@
         </label>
         <label>
           New password
-          <input type="password" formControlName="password" autocomplete="new-password" placeholder="Leave empty to keep it" />
+          <input
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            placeholder="Leave empty to keep it"
+          />
           @if (profileForm.controls.password.touched && profileForm.controls.password.invalid) {
-            <small>The password must have at least 8 characters.</small>
+            <small class="font-normal text-primary">The password must have at least 8 characters.</small>
           }
         </label>
 
-        <div class="profile-actions">
-          <a routerLink="/employee" class="secondary-button">Cancel</a>
-          <button type="submit" [disabled]="saving()">
+        <div class="mt-2 flex justify-end gap-3">
+          <a
+            routerLink="/employee"
+            class="inline-flex min-h-[2.65rem] items-center rounded-[0.55rem] border border-primary bg-white px-4 py-[0.6rem] font-[650] text-primary no-underline"
+            >Cancel</a
+          >
+          <button
+            class="min-h-[2.65rem] cursor-pointer rounded-[0.55rem] border border-primary bg-primary px-4 py-[0.6rem] font-[650] text-white"
+            type="submit"
+            [disabled]="saving()"
+          >
             {{ saving() ? 'Saving...' : 'Save changes' }}
           </button>
         </div>

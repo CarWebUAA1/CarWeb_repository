@@ -15,6 +15,7 @@ import { MySqlTestDriveRepository } from "../repositories/testDrive.repository.j
 import { TestDriveService } from "../services/testDrive.service.js";
 import { createTestDriveRouter } from "./testDrive.routes.js";
 import AppointmentsRoutes from "./Appointments.routes.js";
+import SaleOffersRoutes from "./SaleOffers.routes.js";
 import { AppointmentController } from "../controllers/appointment.controller.js";
 import { MySqlAppointmentRepository } from "../repositories/appointment.repository.js";
 import { AppointmentService } from "../services/appointment.service.js";
@@ -46,6 +47,12 @@ export class AppRoutes {
 
         router.use("/appointments", createAppointmentRouter(appointmentController));
 
+        // Customer side of an appointment (manage link token): view, modify and cancel.
+        router.use("/appointments", AppointmentsRoutes);
+
+        // Offer my car for sale (US-19): estimate, create the sale request, change the listing price.
+        router.use("/sale-offers", SaleOffersRoutes);
+
         // Test drive scheduling, rejecting overlapping schedules for the same car.
         const testDriveController = new TestDriveController(new TestDriveService(new MySqlTestDriveRepository(pool)));
         router.use("/test-drives", createTestDriveRouter(testDriveController));
@@ -65,7 +72,5 @@ export class AppRoutes {
         router.use("/manager/data", createManagerDataRouter(managerDataController));
         
         return router;
-
-        router.use("/appointments", AppointmentsRoutes);
     }
 }

@@ -1304,3 +1304,200 @@ Para que el frontend vuelva a compilar con las páginas de test drives, del gere
 
 - Se eligió la tarjeta de HEAD porque su texto ("Open") es genérico; la entrante decía "Browse catalog", que solo tiene sentido para el catálogo de repuestos.
 - Verificado: `ng build` y `ng test` (69 tests) en el frontend, y `tsc` y `vitest` (54 tests) en el backend. El backend necesitaba `npm install` porque el merge agregó `jsonwebtoken`.
+
+---
+
+## 2026-11-24 — Frontend de las funciones que solo tenían backend (y reparación del backend después de los merges #33–#35)
+
+**Ubicación:** `CarWebCode/backend/src/` y `CarWebCode/frontend/src/app/`
+
+### 1. Reparación del backend (no compilaba)
+
+| Problema | Arreglo |
+|---|---|
+| `Appointments.controller.ts`: `modifyAppointment` y `cancelAppointment` quedaron encimadas en el merge y se perdió el cuerpo de *cancel* | Se separaron. *Cancel* se reescribió para el esquema nuevo: el cliente se identifica con el **token del enlace** (no con `userId`), pide `confirm: true`, motivo opcional (≤255), notifica al empleado asignado y escribe en `appointment_logs` |
+| `Appointments.routes.ts` se montaba **después** del `return` en `routes/index.ts` (nunca se ejecutaba) | Se monta antes del `return`, con `GET /:id/manage`, `PATCH /:id/modify` y `PATCH /:id/cancel` |
+| `SaleOffers.routes.ts` no estaba montada | Montada en `/sale-offers`. `server.ts` acepta cuerpos de hasta 35 MB **solo** en esa ruta (3–5 fotos de 5 MB en base64) |
+| `Cars.routes.ts` importaba `middlewares/validateDate.js`, que no existe | Se quitó el import |
+| CRUD de inventario (`Cars.Controller.ts`) usaba el esquema viejo (`Cars`, `InventoryStatus = 1`) y no pedía sesión | Reescrito para `cars` (camelCase en la API), **solo gerentes** (`authenticateToken` + `requireManager`), validación en `validators/inventoryCar.ts` |
+| `filterCars` no coincidía con su prueba | SQL dinámico, valores recortados y respuesta `{ cars }` |
+
+### 2. Cambios de backend que necesitaba el frontend
+
+- **`POST /appointments` devuelve `manageToken`** (una sola vez; en la base solo queda su SHA-256). No hay envío de correo, así que sin esto el cliente nunca podía modificar, cancelar ni ofrecer su auto. Cuando exista el correo, el enlace se manda por ahí.
+- **Cita "Sale evaluation" sin auto:** el validador ahora acepta ese tipo y `carId` opcional solo para él (`POST /sale-offers` exige una cita de este tipo).
+- **`GET /appointments/:id/manage`** (token en el header `X-Manage-Token`, para que no quede en los logs): devuelve la cita, `canModify`/`canCancel` y la oferta de venta ligada, si hay.
+- **Al confirmar una cita, quien confirma queda como empleado responsable** (`employee_id`), si no había uno. Lo pide ApproveAppointments y hace falta para que las notificaciones de *modify*/*cancel* lleguen a alguien.
+- **Inventario:** crear/editar pide confirmación (`confirmLowerSalePrice`) si el precio de venta es menor al de compra; VIN o placas repetidos → 409; no se puede borrar ni cambiar el estado de un auto con una operación activa (`trades.is_active`); borrar = `inventory_status = 'Out of stock'`.
+
+### 3. Pantallas nuevas (frontend)
+
+| Ruta | Quién | Qué hace |
+|---|---|---|
+| `/employee/appointments` | Empleados y gerentes | Lista de citas con filtro (Pending / Confirmed / All) y búsqueda. Confirmar, rechazar (motivo obligatorio), cancelar (motivo obligatorio) y reprogramar |
+| `/employee/test-drives` | Empleados y gerentes | La página ya existía pero había perdido su ruta en un merge; se volvió a enlazar |
+| `/manager/inventory` | Gerentes | Tabla del inventario con búsqueda, filtro por estado y "mostrar autos dados de baja". Agregar/editar auto, cambiar precio y dar de baja (con segundo clic) |
+| `/appointments/:id/manage?token=…` | Cliente (sin cuenta) | Ver su cita, cambiar la fecha (no a menos de 2 h), cancelar (con casilla de confirmación), y si es *Sale evaluation*: enlace para ofrecer su auto o ver su solicitud y cambiar el precio pedido (máx. +10 %, una vez cada 24 h) |
+| `/sell-my-car` | Cliente | 3 pasos: agendar la cita *Sale evaluation* → datos del auto y estimado ("Estimated – subject to inspection") → VIN, 3–5 fotos JPG/PNG ≤5 MB y aceptar el estimado |
+
+- **Detalle del auto:** después de agendar se muestra el mensaje (antes se guardaba pero nunca se mostraba) y el enlace **"Manage your appointment"**.
+- **Tarjetas de los portales:** *Appointments* y *Test drives* ya abren su página (empleado y gerente); el gerente tiene además *Car inventory*. El texto del botón ahora viene de un campo `action` en lugar de ternarios en la plantilla.
+- **Estilos compartidos** en `styles.css` (`.ws-page`, `.ws-panel`, `.ws-form`, `.btn`, `.ws-table`, `.ws-pill`…) para que cada página no repita CSS y quede bajo el presupuesto de 4 kB.
+- `utils/http-error.ts` (lee `{ message }` o `{ error }` del API) y `utils/datetime.ts` (conversión de fechas y horario de atención).
+
+### 4. Cosas que el merge había revertido
+
+- Volvió la página `/register`, que llamaba a `POST /users/register` (ya no existe). Se eliminó otra vez, con `register()` y sus tipos.
+- El menú ☰ volvió a *Log in / Sign up*. Ahora: Home, Catalog, Spare parts, **Sell my car** y **Employee access**.
+- El login vuelve a decir "Staff access" y "← Back to CarWeb".
+- `employee/profile` y `manager/staff` se renderizan en el navegador (`app.routes.server.ts`): dependen de la sesión, que el servidor no ve.
+
+### 5. Otros
+
+- `.gitignore`: `backend/uploads/` (fotos de los clientes).
+- `.env.example`: se agregó `JWT_SECRET` (sin él, el login responde 500).
+- **Base local:** le faltaban `trade_logs`, `appointment_logs` y `notifications` (están en `schema.sql` desde los merges). Se crearon con sus `CREATE TABLE` de `schema.sql`, sin borrar nada. **Cada integrante debe hacer lo mismo** (o recrear la base), o *modify*, *cancel* y las ofertas de venta responden 500.
+
+### Verificación
+
+- Backend: `tsc` sin errores; `vitest` → **14 archivos, 131 pruebas** (antes 4 fallaban y `Appointments.test.ts` no cargaba). Nuevas: `inventory.test.ts`, `appointmentService.test.ts` y `Appointments.test.ts` reescrito (cancel con token, modify, manage).
+- Frontend: `ng build` sin errores (sigue la advertencia previa de presupuesto en `staff-management.component.css`); `ng test` → **21 archivos, 90 pruebas**. Nuevas specs de las 4 páginas.
+- **API real contra MySQL** (script de 23 pasos, borra lo que crea): login, inventario (401/403, crear, VIN repetido, editar, precio, baja), cita con token, enlace con token incorrecto → 404, confirmar (asigna a Ana Torres), reprogramar, modificar → Pending, cancelar (pide confirmación, luego 409), *Sale evaluation* sin auto, estimado de un Ford Escape 2020, oferta con 3 fotos, precio pedido (>10 % → 400, ok, otra vez → 409 por las 24 h).
+- No se probó en el navegador real.
+
+### Pendiente
+
+- **Envío de correo** con el enlace de la cita; hoy solo se muestra en pantalla al agendar.
+- **Bitácora de inventario** (fecha, gerente, auto, acción y campos cambiados): la historia la pide y no hay tabla para eso.
+- **`/test-drives` sigue sin token** en el backend: cualquiera puede llamarlo.
+- Las fotos de `uploads/cars` no se publican como estáticos; hoy no hace falta porque esos autos no salen en el catálogo.
+- `validators/cars.validators.ts` (esquema viejo) ya no se usa.
+
+---
+
+## 2026-11-24 — Migración del CSS a Tailwind CSS v4 (primera parte)
+
+### Qué se hizo
+
+- **`styles.css`** ahora carga Tailwind v4 (`@tailwindcss/postcss`, configurado en `frontend/.postcssrc.json`), **sin Preflight**: solo `tailwindcss/theme.css` y `tailwindcss/utilities.css`.
+- La paleta pasó de `:root` a **`@theme static`** con los mismos nombres (`--color-inferno`, `--color-ash-deep`, `--color-primary`, `--color-text-muted`…). Cada color genera utilidades (`bg-inferno-tint`, `text-text-muted`, `border-border-strong`…) y `var(--color-*)` sigue funcionando en el CSS que aún no se migra. Se agregaron `shadow-card` y `shadow-panel`.
+- Estilos globales en capas: `body`, `a`, `.visually-hidden` y `font: inherit` para `button/input/select/textarea` en `@layer base`; las clases compartidas `.ws-*` y `.btn` en `@layer components`, para que una utilidad pueda sobrescribirlas (por ejemplo, `ws-page max-w-[760px]`).
+- **Migrados a utilidades (se borró su `.css` y su `styleUrl`):**
+  - Componentes: `card`, `button`, `search-bar`, `car-card`, `site-footer`, `employee-header`, `site-header`, `quick-access-sidebar` y `appointment-modal` (estaba vacío).
+  - Páginas: `home`, `car-catalog`, `employee-appointments`, `manage-appointment`, `sell-my-car` y `manager-inventory`.
+  - Los `:host { display:flex; flex-direction:column; min-height:100dvh }` ahora son `host: { class: 'flex min-h-dvh flex-col' }` en el `@Component`.
+  - Los media queries del header (760 px y 480 px) ahora son variantes `max-[760px]:` y `max-[480px]:`.
+  - El botón activo del header usa `aria-current="page"` (`ariaCurrentWhenActive`) y `aria-[current=page]:bg-inferno-tint` en lugar de la clase `site-header__btn--active`.
+
+### Para qué sirve
+
+Los estilos quedan junto al HTML, con la paleta de CarWeb como utilidades. Así no hay que inventar nombres de clase ni repetir CSS en cada componente, y el presupuesto de 4 kB por componente deja de ser un problema.
+
+### Por qué así
+
+- **Sin Preflight:** el reset de Tailwind quita márgenes, tamaños de títulos, viñetas y estilos de botones. Las páginas que aún usan CSS propio cuentan con esos valores del navegador, y activarlo ahora las rompería. Se activará cuando todo esté migrado; para eso basta con cambiar los dos `@import` por `@import 'tailwindcss';`.
+- **`@theme static`:** sin `static`, Tailwind solo emite las variables que usa alguna utilidad, y el CSS que aún no se migra perdería colores.
+- **Clases que usan las pruebas:** se conservaron como "ganchos" sin estilos (`employee-header__name`, `site-header__nav`, `site-header__btn--icon`, `sidebar`, `sidebar-toggle`, `sidebar__link`, `catalog__status`, `catalog__search`, `pagination`, `action-form`, `price-form`, `estimate`) para no reescribir los specs.
+
+### Verificación
+
+- `ng build` sin errores (sigue la advertencia previa de presupuesto en `staff-management.component.css`). El CSS generado contiene las utilidades usadas (`bg-graphite/50`, `grid-cols-[repeat(...)]`, `max-[760px]:…`).
+- `ng test` → **21 archivos, 90 pruebas**, todas pasan.
+- No se revisó visualmente en el navegador.
+
+### Pendiente
+
+- Ver la segunda parte (abajo).
+
+---
+
+## 2026-11-24 — Migración del CSS a Tailwind CSS v4 (segunda parte: todas las páginas)
+
+### Qué se hizo
+
+- **Migradas las páginas que faltaban** (se borró su `.css` y su `styleUrl`): `login` (y se borró `pages/auth-form.css`, que ya solo usaba el login), `car-detail`, `spare-part-catalog`, `spare-part-detail`, `spare-parts`, `employee-home`, `manager-home`, `employee-profile`, `manager-table`, `employee-test-drives` y `staff-management`. También se borró `app.component.css`, que estaba vacío.
+- **Ya no queda ningún CSS de componente.** El único archivo de estilos es `src/styles.css`.
+- Nueva sombra en el tema: `--shadow-raised` (`hover:shadow-raised`), que usan las tarjetas de repuestos y del portal del gerente.
+- `employee-test-drives` reutiliza las clases compartidas (`ws-page`, `ws-panel`, `ws-note`, `ws-message--success/error`, `ws-table`), porque sus estilos eran casi idénticos.
+- Estados visuales que antes eran clases modificadoras ahora salen de atributos:
+  - **Miniatura activa** de la galería (`car-detail`): `aria-pressed` y `aria-pressed:border-primary`.
+  - **Empleado seleccionado** (`staff-management`): el `aria-current` que ya existía, con `aria-[current=true]:bg-inferno-tint`.
+  - **Mensajes de éxito o error** (`spare-part-detail`, `spare-parts`, `employee-profile`, `staff-management`): `[attr.data-type]="messageType()"` y variantes `data-[type=error]:…`.
+- Las tarjetas del portal del gerente solo se elevan al pasar el mouse si tienen enlace: `has-[a]:hover:shadow-raised`, sin binding condicional.
+
+### Para qué sirve
+
+Se terminó de quitar el CSS por componente: cada plantilla ya tiene sus estilos. Ya no sale la advertencia de presupuesto de `staff-management.component.css`.
+
+### Por qué así
+
+- **`data-type` / `aria-*` en lugar de `[class.x]`:** Angular no acepta clases con corchetes (`bg-[#edf8ef]`) en `[class.nombre]`. Con un atributo, la plantilla solo dice el estado y Tailwind decide el estilo. `aria-pressed` y `aria-current` además informan el estado a los lectores de pantalla.
+- **Estilos de elementos hijos** (tablas, `dl`, formularios con muchos `input`): se usan variantes como `[&_td,&_th]:px-[0.85rem]` en el contenedor, para no repetir lo mismo en cada celda o campo.
+- **Ganchos de pruebas:** igual que en la primera parte, se conservaron sin estilos las clases que usan los specs (`gallery__main`, `gallery__thumb`, `specs`, `detail__warning`, `part-card`, `movement-button`, `movement-form`, `message`/`success`/`error`, `task`, `task__link`, `task__badge`, `employee-header__*`, `manager-header__*`, `schedule__car`, `schedule__submit`, `upcoming`, `staff-page__heading`, `staff-detail`, `staff-detail__heading`, `primary-button`, `staff-card`).
+- **Breakpoints:** `max-[760px]:` genera `width < 760px`, y antes era `max-width: 760px` (incluye el 760). Solo cambia exactamente en ese píxel.
+
+### Verificación
+
+- `ng build` sin errores **ni advertencias**.
+- `ng test` → **21 archivos, 90 pruebas**, todas pasan.
+- Se revisó en el CSS generado que las utilidades complejas salen bien: selectores con coma, `[&_input]:focus:`, `calc()` con espacios, `font-[Arial,…]` como `font-family`.
+- No se revisó visualmente en el navegador.
+
+### Pendiente
+
+- Ver la tercera parte (abajo).
+
+---
+
+## 2026-11-24 — Migración a Tailwind CSS v4 (tercera parte: Preflight, clases compartidas y header de los portales)
+
+### Qué se hizo
+
+**1. Clases compartidas con `@apply`.** En `styles.css`, todas las clases `.ws-*` y `.btn` (`.btn--ghost`, `.btn--small`, `.ws-pill--*`, `.ws-table`…) se reescribieron con `@apply` de utilidades de Tailwind dentro de `@layer components`. Conservan sus nombres, así que las plantillas y las pruebas no cambian.
+
+**2. Preflight activado.** `styles.css` ahora empieza con `@import 'tailwindcss';` (antes solo cargaba `theme.css` y `utilities.css`). Para que las páginas se vean igual que antes:
+
+| En `@layer base` | Por qué |
+|---|---|
+| `html { line-height: normal }` | Preflight pone 1.5; la app se diseñó con el valor del navegador |
+| Tamaño, peso y margen de `h1`, `h2`, `h3` (2em / 1.5em / 1.17em) | Preflight los deja sin tamaño ni margen |
+| Margen vertical de `p` y `dl` (1em) | Preflight quita todos los márgenes |
+| `a` con color primario y subrayado | Preflight hace que los enlaces hereden color y no se subrayen |
+| `::placeholder { color: #757575 }` | Preflight usa el 50 % del color del texto (contraste ~3:1, poco legible) |
+| `cursor: pointer` en botones | Preflight los deja con el cursor normal |
+| `--font-sans` en `@theme` con la fuente de CarWeb | `font-sans` y Preflight usan la misma fuente que el resto de la app |
+
+Ajustes en plantillas por el `box-sizing: border-box` de Preflight: `box-content` en los `main` de `car-catalog`, `car-detail`, `spare-part-catalog` y `spare-part-detail`, en las tarjetas `part-card` y en las miniaturas de la galería; sin eso quedaban 32 px más angostos. También se agregaron `h-[90px] w-[120px]` a las miniaturas de fotos de `sell-my-car` (Preflight pone `height: auto` a las imágenes) y la clase `btn` a los botones "Try again" de los catálogos y del detalle del auto, que no tenían estilo.
+
+**3. Modal de citas con estilo.** `appointment-modal` nunca tuvo estilos: su CSS estaba vacío desde que se creó, y se veía como texto plano al final del detalle del auto. Con Preflight sus campos quedaban sin borde. Ahora es un modal de verdad: fondo oscuro, tarjeta centrada, botón ×, campos con borde y botones `btn` / `btn btn--ghost`.
+
+**4. Componente `<app-portal-header>`** (`components/portal-header/`), que reemplaza a `employee-header` y a las copias del header en `employee-home` y `manager-home`.
+- Uso: `<app-portal-header />` (portal de empleado, por defecto) o `<app-portal-header portal="manager" />`. Cambia el texto de la insignia ("Employee/Manager portal") y a dónde lleva el logo (`/employee` o `/manager`).
+- Contiene el nombre del usuario y el botón *Log out*. Las páginas ya no tienen su propio `logout()`.
+- Lo usan `employee-home`, `manager-home`, `employee-appointments` y `employee-test-drives`.
+- Ganchos para pruebas: `portal-header__badge`, `portal-header__name`, `portal-header__logout`. Las specs de `employee-home` y `manager-home` se actualizaron a esos nombres, y hay una spec nueva del componente (3 pruebas).
+
+### Para qué sirve
+
+La migración a Tailwind queda completa: Preflight normaliza los estilos entre navegadores, las clases compartidas usan las mismas utilidades que las plantillas y el header de los portales existe una sola vez.
+
+### Por qué así
+
+- **`@apply` en lugar de copiar utilidades en cada plantilla:** `.ws-field`, `.btn`, `.ws-table`… se usan en muchas páginas y en elementos que crea el código (`ws-pill--…`, `ws-message--…`). Mantenerlas como clases evita repetir listas largas de utilidades.
+- **Restaurar valores del navegador en `@layer base`:** el objetivo era migrar sin rediseñar. Estas reglas son ahora la tipografía base del proyecto y cualquier utilidad las sobrescribe.
+- **`portal` como input:** el header de empleado y el de gerente solo se diferenciaban en el texto de la insignia y el enlace del logo.
+
+### Verificación
+
+- `ng build` sin errores ni advertencias; `ng test` → **22 archivos, 93 pruebas**, todas pasan.
+- **Comparación visual en Chrome:** 19 pantallas a 1280 px (públicas con datos reales del backend; las de empleado y gerente con una sesión falsa, por eso muestran los estados de error o vacíos), antes y después de activar Preflight, píxel por píxel.
+  - 14 quedaron idénticas.
+  - Las diferencias que quedan son menores: el margen por defecto de los checkboxes (3–4 px), `small` al 80 % en lugar de ~83 %, y el fondo gris que el navegador ponía detrás de las miniaturas de la galería.
+  - En `employee-profile` y `staff-management`, los botones con `min-h-[2.65rem]` ahora miden 42 px en total: con `border-box` el padding ya no se suma. Es lo que la regla original pretendía; antes medían ~62 px.
+- También se revisó el modal de citas y 4 pantallas a 390 px de ancho.
+
+### Pendiente
+
+- En pantallas de ~390 px, el botón ☰ del header público baja a una segunda fila: logo, Catalog, Spare parts, el botón de empleado y ☰ suman unos 407 px. Por esas medidas ya pasaba antes de esta migración.
+- `spare-parts` conserva a propósito su fuente Arial y el color `#202b38`.
+- Los colores sueltos que quedan (`#edf8ef`, `#fff0ef`, `#b42318`, los de `ws-pill--*`…) podrían pasar al tema como colores de estado (*success*, *warning*, *danger*).

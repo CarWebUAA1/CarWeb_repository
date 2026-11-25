@@ -1,14 +1,15 @@
-<main class="auth-card">
-  <a class="brand" routerLink="/" aria-label="CarWeb home">
-    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+<main class="box-border w-full max-w-[430px] rounded-[14px] bg-surface p-8 shadow-[0_5px_25px_rgb(0_0_0/10%)]">
+  <a class="mb-5 flex justify-center" routerLink="/" aria-label="CarWeb home">
+    <img class="block h-10 w-auto" src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
   </a>
-  <h1>Log in</h1>
-  <p class="subtitle">Welcome back to CarWeb</p>
+  <h1 class="mt-0 text-center text-graphite">Log in</h1>
+  <p class="mb-[25px] text-center text-text-muted">Staff access</p>
 
   <form (submit)="login($event)">
-    <label for="email">Email</label>
+    <label class="mx-0 mt-[14px] mb-[6px] block font-bold text-graphite" for="email">Email</label>
     <input
       id="email"
+      class="box-border w-full rounded-[7px] border border-border-strong p-3 text-[15px] focus:border-inferno focus:outline-2 focus:outline-ash [&.ng-invalid.ng-touched]:border-inferno"
       type="email"
       name="email"
       [(ngModel)]="email"
@@ -18,9 +19,10 @@
       required
     />
 
-    <label for="password">Password</label>
+    <label class="mx-0 mt-[14px] mb-[6px] block font-bold text-graphite" for="password">Password</label>
     <input
       id="password"
+      class="box-border w-full rounded-[7px] border border-border-strong p-3 text-[15px] focus:border-inferno focus:outline-2 focus:outline-ash [&.ng-invalid.ng-touched]:border-inferno"
       type="password"
       name="password"
       [(ngModel)]="password"
@@ -28,20 +30,26 @@
       required
     />
 
-    <button type="submit" [disabled]="isLoading()">
+    <button
+      class="mt-6 w-full cursor-pointer rounded-[7px] border-0 bg-primary p-[13px] text-base font-bold text-white hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60"
+      type="submit"
+      [disabled]="isLoading()"
+    >
       {{ isLoading() ? 'Verifying…' : 'Log in' }}
     </button>
   </form>
 
   <p
-    class="message"
+    class="message mt-4 text-center wrap-anywhere"
     [class.success]="isSuccess()"
+    [class.text-ash-deep]="isSuccess()"
     [class.error]="!isSuccess()"
+    [class.text-inferno]="!isSuccess()"
     role="status"
     aria-live="polite"
   >
     {{ message() }}
   </p>
 
-  <p class="switch">Don't have an account? <a routerLink="/register">Sign up</a></p>
+  <p class="mb-0 text-center"><a routerLink="/">← Back to CarWeb</a></p>
 </main>

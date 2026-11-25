@@ -55,14 +55,15 @@ describe('CarDetailComponent', () => {
 
   afterEach(() => http.verify());
 
-  it('shows the car information, photos and disabled actions', async () => {
+  it('shows the car information, photos and its actions', async () => {
     const el = await render(car());
     expect(el.querySelector('h1')?.textContent).toContain('Honda Civic 2019');
     expect(el.querySelector('.specs')?.textContent).toContain('CVT');
     expect(el.querySelectorAll('.gallery__thumb')).toHaveLength(2);
     const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>('app-button button'));
     expect(buttons.map((b) => b.textContent?.trim())).toEqual(['Schedule appointment', 'Buy']);
-    expect(buttons.every((b) => b.disabled)).toBe(true);
+    // An available car can get appointments; buying online is not built yet.
+    expect(buttons.map((b) => b.disabled)).toEqual([false, true]);
     expect(el.querySelector('.detail__warning')).toBeNull();
   });
 

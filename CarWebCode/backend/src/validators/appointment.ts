@@ -6,7 +6,8 @@ const DATETIME = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/;
 const APPOINTMENT_TYPES: AppointmentType[] = [
   "Viewing",
   "Test drive",
-  "Purchase"
+  "Purchase",
+  "Sale evaluation"
 ];
 
 function parseId(value: unknown, field: string): number {
@@ -156,7 +157,12 @@ export function parseCreateAppointment(
     clientName,
     clientPhone,
     clientEmail,
-    carId: parseId(data["carId"], "carId"),
+    // A sale evaluation is about the customer's own car, which is not in the inventory yet.
+    carId:
+      appointmentType === "Sale evaluation" &&
+      (data["carId"] === undefined || data["carId"] === null || data["carId"] === "")
+        ? null
+        : parseId(data["carId"], "carId"),
     appointmentType: appointmentType as AppointmentType,
     appointmentDatetime: parseDatetime(
       data["appointmentDatetime"],

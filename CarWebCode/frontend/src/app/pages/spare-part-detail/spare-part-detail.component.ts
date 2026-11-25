@@ -17,7 +17,6 @@ import { SparePartService } from '../../services/spare-part.service';
   selector: 'app-spare-part-detail',
   imports: [SiteHeaderComponent, RouterLink, CurrencyPipe],
   templateUrl: './spare-part-detail.component.html',
-  styleUrl: './spare-part-detail.component.css',
 })
 export class SparePartDetailComponent {
   private readonly sparePartService = inject(SparePartService);

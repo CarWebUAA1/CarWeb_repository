@@ -6,8 +6,6 @@ import { environment } from '../../environments/environment';
 import {
   LoginRequest,
   LoginResponse,
-  RegisterUserRequest,
-  RegisterUserResponse,
   StaffDetailsRequest,
   StaffListResponse,
   StaffMutationResponse,
@@ -19,10 +17,6 @@ export class UserService {
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly baseUrl = `${environment.apiUrl}/users`;
-
-  register(user: RegisterUserRequest): Observable<RegisterUserResponse> {
-    return this.http.post<RegisterUserResponse>(`${this.baseUrl}/register`, user);
-  }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.baseUrl}/login`, credentials);

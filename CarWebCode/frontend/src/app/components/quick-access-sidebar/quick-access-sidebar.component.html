@@ -1,7 +1,7 @@
 <button
   #toggle
   type="button"
-  class="sidebar-toggle"
+  class="sidebar-toggle flex size-10 cursor-pointer items-center justify-center rounded-lg border border-border-strong bg-surface p-0 text-graphite hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary"
   aria-label="Quick access"
   aria-controls="quick-access-panel"
   [attr.aria-expanded]="isOpen()"
@@ -13,11 +13,21 @@
 </button>
 
 @if (isOpen()) {
-  <div class="sidebar-backdrop" (click)="close()"></div>
-  <aside id="quick-access-panel" class="sidebar" aria-labelledby="quick-access-title">
-    <div class="sidebar__header">
-      <h2 id="quick-access-title" class="sidebar__title">Quick access</h2>
-      <button #closeButton type="button" class="sidebar__close" aria-label="Close quick access" (click)="close()">
+  <div class="sidebar-backdrop fixed inset-0 z-100 bg-graphite/50" (click)="close()"></div>
+  <aside
+    id="quick-access-panel"
+    class="sidebar fixed inset-y-0 right-0 z-101 box-border w-[min(300px,85vw)] overflow-y-auto bg-surface px-5 py-4 shadow-[-8px_0_24px_rgb(0_0_0/20%)]"
+    aria-labelledby="quick-access-title"
+  >
+    <div class="mb-4 flex items-center justify-between">
+      <h2 id="quick-access-title" class="m-0 text-[1.15rem] text-graphite">Quick access</h2>
+      <button
+        #closeButton
+        type="button"
+        class="flex cursor-pointer rounded-md border-0 bg-transparent p-[0.35rem] text-graphite hover:bg-slate-light"
+        aria-label="Close quick access"
+        (click)="close()"
+      >
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
           <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
@@ -25,14 +35,21 @@
     </div>
 
     <nav aria-label="Quick access">
-      <ul class="sidebar__list">
+      <ul class="m-0 list-none p-0">
         @for (link of links; track link.label) {
           <li>
             @if (link.route) {
-              <a class="sidebar__link" [routerLink]="link.route" (click)="close()">{{ link.label }}</a>
+              <a
+                class="sidebar__link flex items-center justify-between border-b border-slate-light px-2 py-[0.7rem] font-semibold text-graphite no-underline hover:text-primary"
+                [routerLink]="link.route"
+                (click)="close()"
+                >{{ link.label }}</a
+              >
             } @else {
-              <span class="sidebar__link sidebar__link--soon">
-                {{ link.label }} <span class="sidebar__badge">Soon</span>
+              <span
+                class="sidebar__link sidebar__link--soon flex items-center justify-between border-b border-slate-light px-2 py-[0.7rem] font-normal text-text-muted"
+              >
+                {{ link.label }} <span class="rounded-full bg-slate-light px-2 py-[0.1rem] text-xs">Soon</span>
               </span>
             }
           </li>

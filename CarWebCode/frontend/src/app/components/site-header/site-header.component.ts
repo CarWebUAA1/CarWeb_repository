@@ -9,7 +9,6 @@ import { SearchBarComponent } from '../search-bar/search-bar.component';
   selector: 'app-site-header',
   imports: [RouterLink, RouterLinkActive, SearchBarComponent, QuickAccessSidebarComponent],
   templateUrl: './site-header.component.html',
-  styleUrl: './site-header.component.css',
 })
 export class SiteHeaderComponent {
   private readonly router = inject(Router);

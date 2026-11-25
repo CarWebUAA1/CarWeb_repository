@@ -1,39 +1,24 @@
-<header class="employee-header">
-  <a class="employee-header__brand" routerLink="/employee" aria-label="Employee home">
-    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
-  </a>
-  <span class="employee-header__badge">
-    <i class="fa-solid fa-user-tie" aria-hidden="true"></i> Employee portal
-  </span>
-  <div class="employee-header__user">
-    <span class="employee-header__name">{{ auth.user()?.name }}</span>
-    <button type="button" class="employee-header__logout" (click)="logout()">
-      <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Log out
-    </button>
-  </div>
-</header>
+<app-portal-header />
 
-<main class="employee-home">
-  <h1>Welcome, {{ auth.user()?.name }}</h1>
-  <p class="employee-home__intro">Choose a task to get started.</p>
+<main class="mx-auto box-border w-full max-w-[1200px] flex-1 px-4 pt-8 pb-12">
+  <h1 class="m-0">Welcome, {{ auth.user()?.name }}</h1>
+  <p class="mx-0 mt-2 mb-6 text-text-muted">Choose a task to get started.</p>
 
-  <ul class="tasks">
+  <ul class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4 p-0">
     @for (task of tasks; track task.title) {
-      <li class="task">
+      <li class="task rounded-xl bg-surface p-5 shadow-panel">
         @if (task.route) {
-          <a class="task__link" [routerLink]="task.route">
-            <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
-            <h2 class="task__title">{{ task.title }}</h2>
-            <p class="task__description">{{ task.description }}</p>
-            <span class="task__action">
-              {{ task.route === '/employee/profile' ? 'Open profile' : 'Browse catalog' }}
-            </span>
+          <a class="task__link block h-full text-inherit no-underline" [routerLink]="task.route">
+            <i class="fa-solid text-[1.5rem] text-primary" [class]="task.icon" aria-hidden="true"></i>
+            <h2 class="mx-0 mt-3 mb-[0.35rem] text-[1.05rem]">{{ task.title }}</h2>
+            <p class="mx-0 mt-0 mb-3 text-[0.9rem] text-text-muted">{{ task.description }}</p>
+            <span class="inline-block rounded-full px-[0.6rem] py-[0.15rem] text-[0.75rem] bg-primary text-white">{{ task.action ?? 'Open' }}</span>
           </a>
         } @else {
-          <i class="fa-solid task__icon" [class]="task.icon" aria-hidden="true"></i>
-          <h2 class="task__title">{{ task.title }}</h2>
-          <p class="task__description">{{ task.description }}</p>
-          <span class="task__badge">Coming soon</span>
+          <i class="fa-solid text-[1.5rem] text-primary" [class]="task.icon" aria-hidden="true"></i>
+          <h2 class="mx-0 mt-3 mb-[0.35rem] text-[1.05rem]">{{ task.title }}</h2>
+          <p class="mx-0 mt-0 mb-3 text-[0.9rem] text-text-muted">{{ task.description }}</p>
+          <span class="task__badge inline-block rounded-full px-[0.6rem] py-[0.15rem] text-[0.75rem] bg-slate-light text-text-muted">Coming soon</span>
         }
       </li>
     }

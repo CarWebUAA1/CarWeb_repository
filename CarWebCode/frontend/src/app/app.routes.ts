@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { employeeGuard } from './guards/employee.guard';
-import { SparePartsComponent } from "./pages/spare-parts/spare-parts.component";
 import { managerGuard } from './guards/manager.guard';
 
 export const routes: Routes = [
@@ -21,10 +20,18 @@ export const routes: Routes = [
       import('./pages/car-detail/car-detail.component').then((m) => m.CarDetailComponent),
   },
   {
-    path: 'register',
-    title: 'Sign up | CarWeb',
+    path: 'sell-my-car',
+    title: 'Sell your car | CarWeb',
     loadComponent: () =>
-      import('./pages/register/register.component').then((m) => m.RegisterComponent),
+      import('./pages/sell-my-car/sell-my-car.component').then((m) => m.SellMyCarComponent),
+  },
+  {
+    // Reached through the link given when the appointment is booked (?token=...).
+    path: 'appointments/:id/manage',
+    title: 'Your appointment | CarWeb',
+    loadComponent: () =>
+      import('./pages/manage-appointment/manage-appointment.component')
+        .then((m) => m.ManageAppointmentComponent),
   },
   {
     path: 'login',
@@ -45,6 +52,18 @@ export const routes: Routes = [
       .then((m) => m.EmployeeProfileComponent),
   },
   {
+    path: 'employee/appointments',
+    title: 'Appointments | CarWeb',
+    canActivate: [employeeGuard],
+    loadComponent: () => import('./pages/employee-appointments/employee-appointments.component'),
+  },
+  {
+    path: 'employee/test-drives',
+    title: 'Test drives | CarWeb',
+    canActivate: [employeeGuard],
+    loadComponent: () => import('./pages/employee-test-drives/employee-test-drives.component'),
+  },
+  {
     path: 'manager',
     title: 'Manager portal | CarWeb',
     canActivate: [managerGuard],
@@ -56,6 +75,14 @@ export const routes: Routes = [
     canActivate: [managerGuard],
     loadComponent: () => import('./pages/staff-management/staff-management.component')
       .then((m) => m.StaffManagementComponent),
+  },
+  {
+    path: 'manager/inventory',
+    title: 'Car inventory | CarWeb',
+    canActivate: [managerGuard],
+    loadComponent: () =>
+      import('./pages/manager-inventory/manager-inventory.component')
+        .then((m) => m.ManagerInventoryComponent),
   },
   {
     path: 'manager/data/:table',

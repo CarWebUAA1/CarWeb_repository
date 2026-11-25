@@ -1,7 +1,13 @@
-/* Global styles */
+/* Global styles: Tailwind CSS v4 (with Preflight), the CarWeb theme, base typography and
+   the shared workspace classes. Components style themselves with utilities in their templates. */
+@import 'tailwindcss';
 
-/* CarWeb color palette. Use these variables instead of hard-coded colors. */
-:root {
+/* CarWeb color palette. Each --color-* also generates Tailwind utilities
+   (bg-inferno, text-ash-deep, border-primary...). "static" keeps every variable
+   in :root so plain CSS can still use var(--color-*). */
+@theme static {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
   --color-graphite: #26292c;
   --color-inferno: #af0e08;
   --color-inferno-dark: #8c0b06;
@@ -21,28 +27,223 @@
   --color-border: var(--color-slate);
   /* Inputs need 3:1 contrast against the background, which slate (2:1) does not reach. */
   --color-border-strong: var(--color-ash-deep);
+
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 10%);
+  --shadow-panel: 0 2px 8px rgb(0 0 0 / 8%);
+  --shadow-raised: 0 4px 14px rgb(0 0 0 / 14%);
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  color: var(--color-text);
-  background: var(--color-page);
+/* Base typography. Preflight removes every margin and heading size; CarWeb's pages were
+   designed with the browser's defaults, so these bring back the ones they rely on.
+   Utilities (m-0, text-[1.05rem]...) still override them. */
+@layer base {
+  html {
+    line-height: normal;
+  }
+
+  body {
+    color: var(--color-text);
+    background: var(--color-page);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 700;
+  }
+
+  h1 {
+    margin-block: 0.67em;
+    font-size: 2em;
+  }
+
+  h2 {
+    margin-block: 0.83em;
+    font-size: 1.5em;
+  }
+
+  h3 {
+    margin-block: 1em;
+    font-size: 1.17em;
+  }
+
+  p,
+  dl {
+    margin-block: 1em;
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  /* Preflight makes placeholders 50% of the text color (about 3:1); the browser's grey reads better. */
+  ::placeholder {
+    color: #757575;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Hides content visually while keeping it available to screen readers (e.g. form labels). */
+  .visually-hidden {
+    @apply sr-only;
+  }
 }
 
-a {
-  color: var(--color-primary);
-}
+/* Shared workspace classes (appointments, inventory, sell my car, test drives...).
+   They live in the components layer so a utility on the same element wins. */
+@layer components {
+  .ws-page {
+    @apply mx-auto box-border w-full max-w-[1100px] flex-1 px-4 pt-6 pb-12;
+  }
 
-/* Hides content visually while keeping it available to screen readers (e.g. form labels). */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
+  .ws-page h1 {
+    @apply mx-0 mt-3 mb-2;
+  }
+
+  .ws-intro {
+    @apply mx-0 mt-0 mb-5 text-text-muted;
+  }
+
+  .ws-back {
+    @apply font-semibold no-underline;
+  }
+
+  .ws-panel {
+    @apply mb-6 rounded-xl bg-surface p-5 shadow-panel;
+  }
+
+  .ws-panel h2 {
+    @apply mx-0 mt-0 mb-4 text-[1.15rem];
+  }
+
+  .ws-note {
+    @apply m-0 text-text-muted;
+  }
+
+  /* Forms */
+  .ws-form {
+    @apply grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-x-4 gap-y-[0.85rem];
+  }
+
+  .ws-field {
+    @apply grid content-start gap-[0.35rem];
+  }
+
+  .ws-field--wide {
+    @apply col-span-full;
+  }
+
+  .ws-field > label,
+  .ws-field > span {
+    @apply font-semibold;
+  }
+
+  .ws-field :is(input, select, textarea) {
+    @apply box-border w-full rounded-lg border border-border-strong bg-surface p-[0.6rem] text-text;
+  }
+
+  .ws-field small {
+    @apply text-text-muted;
+  }
+
+  .ws-field .ws-error {
+    @apply text-[0.85rem] text-inferno-dark;
+  }
+
+  .ws-check {
+    @apply flex items-center gap-2 font-semibold;
+  }
+
+  .ws-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .ws-actions--form {
+    @apply col-span-full;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex cursor-pointer items-center gap-[0.4rem] rounded-lg border border-primary bg-primary px-4 py-[0.55rem] font-semibold text-white no-underline hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn--ghost {
+    @apply border-border-strong bg-surface text-text hover:bg-slate-light;
+  }
+
+  .btn--small {
+    @apply px-[0.65rem] py-[0.3rem] text-[0.875rem];
+  }
+
+  /* Messages */
+  .ws-message {
+    @apply mx-0 mt-0 mb-4 rounded-lg px-[0.85rem] py-[0.6rem] font-semibold;
+  }
+
+  .ws-message--success {
+    @apply bg-slate-light text-ash-deep;
+  }
+
+  .ws-message--error {
+    @apply bg-inferno-tint text-inferno-dark;
+  }
+
+  /* Tables */
+  .ws-table-wrapper {
+    @apply overflow-x-auto;
+  }
+
+  .ws-table {
+    @apply w-full border-collapse;
+  }
+
+  .ws-table :is(th, td) {
+    @apply border-b border-slate-light px-3 py-[0.6rem] text-left align-top;
+  }
+
+  .ws-table th {
+    @apply text-[0.85rem] whitespace-nowrap text-text-muted;
+  }
+
+  .ws-table tr.is-selected td {
+    @apply bg-inferno-tint;
+  }
+
+  /* Status pills: the modifier is the status in kebab case (see pillClass() in the pages). */
+  .ws-pill {
+    @apply inline-block rounded-full bg-slate-light px-[0.55rem] py-[0.15rem] text-[0.8rem] font-semibold whitespace-nowrap;
+  }
+
+  .ws-pill--pending,
+  .ws-pill--in-progress,
+  .ws-pill--reserved {
+    @apply bg-[#fff4d6] text-[#6b4e00];
+  }
+
+  .ws-pill--confirmed,
+  .ws-pill--available,
+  .ws-pill--completed {
+    @apply bg-[#dff3e4] text-[#1d5b2c];
+  }
+
+  .ws-pill--rejected,
+  .ws-pill--cancelled,
+  .ws-pill--sold,
+  .ws-pill--out-of-service,
+  .ws-pill--no-show {
+    @apply bg-inferno-tint text-inferno-dark;
+  }
+
+  /* Filter tabs: the active one has aria-pressed="true". */
+  .ws-tabs {
+    @apply mb-4 flex flex-wrap gap-[0.4rem];
+  }
+
+  .ws-tabs button[aria-pressed='true'] {
+    @apply border-primary bg-inferno-tint text-inferno-dark;
+  }
 }

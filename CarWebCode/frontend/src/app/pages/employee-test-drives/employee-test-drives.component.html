@@ -1,23 +1,23 @@
-<app-employee-header />
+<app-portal-header />
 
-<main class="test-drives">
-  <a class="test-drives__back" routerLink="/employee">← Employee home</a>
-  <h1>Test drives</h1>
+<main class="ws-page max-w-[1000px]">
+  <a routerLink="/employee">← Employee home</a>
+  <h1 class="mb-5">Test drives</h1>
 
-  <section class="panel" aria-labelledby="schedule-title">
+  <section class="ws-panel" aria-labelledby="schedule-title">
     <h2 id="schedule-title">Schedule a test drive</h2>
 
     @if (pending.isLoading()) {
-      <p class="panel__note">Loading appointments…</p>
+      <p class="ws-note">Loading appointments…</p>
     } @else if (pending.error()) {
-      <p class="panel__note" role="alert">
+      <p class="ws-note" role="alert">
         We couldn't load the appointments.
-        <button type="button" class="link-button" (click)="pending.reload()">Try again</button>
+        <button type="button" class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-primary underline" (click)="pending.reload()">Try again</button>
       </p>
     } @else if (pending.value()?.length === 0) {
-      <p class="panel__note">There are no test drive appointments waiting to be scheduled.</p>
+      <p class="ws-note">There are no test drive appointments waiting to be scheduled.</p>
     } @else {
-      <form class="schedule" (submit)="submit($event)">
+      <form class="grid max-w-[520px] gap-2 [&_label]:font-semibold [&_input,&_select]:box-border [&_input,&_select]:w-full [&_input,&_select]:rounded-lg [&_input,&_select]:border [&_input,&_select]:border-border-strong [&_input,&_select]:bg-surface [&_input,&_select]:p-[0.6rem] [&_input,&_select]:text-text" (submit)="submit($event)">
         <label for="appointment">Appointment</label>
         <select id="appointment" (change)="selectAppointment($any($event.target).value)">
           <option value="" [selected]="selectedId() === null">Choose an appointment</option>
@@ -29,15 +29,15 @@
         </select>
 
         @if (selected(); as appointment) {
-          <p class="schedule__car">
+          <p class="schedule__car mx-0 mt-2 mb-0 [&_i]:text-primary">
             <i class="fa-solid fa-car-side" aria-hidden="true"></i>
             Car: <strong>{{ appointment.car ?? 'none assigned' }}</strong>
           </p>
 
           @if (appointment.carId === null) {
-            <p class="message error" role="alert">This appointment has no car assigned, so it cannot be scheduled.</p>
+            <p class="message error ws-message ws-message--error mt-4 mb-0" role="alert">This appointment has no car assigned, so it cannot be scheduled.</p>
           } @else {
-            <div class="schedule__times">
+            <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 [&_label]:mb-[0.35rem] [&_label]:block">
               <div>
                 <label for="start">Start</label>
                 <input id="start" type="datetime-local" required [value]="start()" (input)="start.set($any($event.target).value)" />
@@ -48,7 +48,7 @@
               </div>
             </div>
 
-            <button type="submit" class="schedule__submit" [disabled]="submitting()">
+            <button type="submit" class="schedule__submit mt-2 cursor-pointer justify-self-start rounded-lg border-0 bg-primary px-5 py-[0.65rem] font-semibold text-white hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60" [disabled]="submitting()">
               {{ submitting() ? 'Scheduling…' : 'Schedule test drive' }}
             </button>
           }
@@ -57,25 +57,25 @@
     }
 
     @if (message(); as m) {
-      <p class="message" [class]="m.type" role="status" aria-live="polite">{{ m.text }}</p>
+      <p class="message ws-message mt-4 mb-0" [class]="m.type + ' ws-message--' + m.type" role="status" aria-live="polite">{{ m.text }}</p>
     }
   </section>
 
-  <section class="panel" aria-labelledby="upcoming-title">
+  <section class="ws-panel" aria-labelledby="upcoming-title">
     <h2 id="upcoming-title">Upcoming test drives</h2>
 
     @if (upcoming.isLoading()) {
-      <p class="panel__note">Loading test drives…</p>
+      <p class="ws-note">Loading test drives…</p>
     } @else if (upcoming.error()) {
-      <p class="panel__note" role="alert">
+      <p class="ws-note" role="alert">
         We couldn't load the test drives.
-        <button type="button" class="link-button" (click)="upcoming.reload()">Try again</button>
+        <button type="button" class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-primary underline" (click)="upcoming.reload()">Try again</button>
       </p>
     } @else if (upcoming.value()?.length === 0) {
-      <p class="panel__note">There are no upcoming test drives.</p>
+      <p class="ws-note">There are no upcoming test drives.</p>
     } @else {
-      <div class="table-wrapper">
-        <table class="upcoming">
+      <div class="ws-table-wrapper">
+        <table class="upcoming ws-table [&_td]:whitespace-nowrap">
           <thead>
             <tr>
               <th scope="col">When</th>

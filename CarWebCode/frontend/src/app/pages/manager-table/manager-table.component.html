@@ -1,26 +1,32 @@
-<header class="table-header">
-  <a class="table-header__back" routerLink="/manager">← Manager home</a>
-  <span class="table-header__label">Manager portal</span>
+<header
+  class="flex items-center justify-between gap-4 border-b-3 border-primary bg-surface px-[max(1.25rem,calc((100%-1200px)/2))] py-4 font-bold"
+>
+  <a class="text-text-muted no-underline hover:text-primary" routerLink="/manager">← Manager home</a>
+  <span class="text-primary">Manager portal</span>
 </header>
 
-<main class="table-page">
-  <h1>{{ tableTitle() }}</h1>
+<main class="mx-auto w-[min(1200px,calc(100%-2rem))] flex-1 pt-8 pb-12">
+  <h1 class="mx-0 mt-0 mb-3 text-graphite">{{ tableTitle() }}</h1>
 
   @if (loading()) {
-    <p class="table-page__message">Loading records…</p>
+    <p class="text-text-muted">Loading records…</p>
   } @else if (error()) {
-    <p class="table-page__message table-page__message--error" role="alert">{{ error() }}</p>
+    <p class="text-primary" role="alert">{{ error() }}</p>
   } @else if (tableData(); as data) {
-    <p class="table-page__count">{{ data.rows.length }} records</p>
+    <p class="text-text-muted">{{ data.rows.length }} records</p>
     @if (data.rows.length === 0) {
-      <p class="table-page__message">There are no records in this table.</p>
+      <p class="text-text-muted">There are no records in this table.</p>
     } @else {
-      <div class="table-wrapper">
-        <table>
+      <div class="overflow-auto rounded-xl border border-[#e3e3e5] bg-surface">
+        <table
+          class="w-full border-collapse text-[0.9rem] [&_td,&_th]:max-w-[24rem] [&_td,&_th]:border-b [&_td,&_th]:border-slate-light [&_td,&_th]:px-[0.85rem] [&_td,&_th]:py-[0.7rem] [&_td,&_th]:text-left [&_td,&_th]:align-top [&_td,&_th]:wrap-anywhere [&_tbody_tr:last-child_td]:border-b-0"
+        >
           <thead>
             <tr>
               @for (column of data.columns; track column) {
-                <th scope="col">{{ formatColumn(column) }}</th>
+                <th class="sticky top-0 bg-surface text-[0.8rem] whitespace-nowrap text-text-muted" scope="col">
+                  {{ formatColumn(column) }}
+                </th>
               }
             </tr>
           </thead>

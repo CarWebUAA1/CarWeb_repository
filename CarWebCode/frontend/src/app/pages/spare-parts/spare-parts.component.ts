@@ -17,7 +17,7 @@ import { finalize } from "rxjs";
   standalone: true,
   imports: [ReactiveFormsModule, SiteHeaderComponent],
   templateUrl: "./spare-parts.component.html",
-  styleUrl: "./spare-parts.component.css"
+  host: { class: "flex min-h-dvh flex-col bg-page font-[Arial,Helvetica,sans-serif] text-[#202b38]" },
 })
 export class SparePartsComponent {
 

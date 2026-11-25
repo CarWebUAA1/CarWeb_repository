@@ -2,13 +2,15 @@
 export type AppointmentType =
   | 'Viewing'
   | 'Test drive'
-  | 'Purchase';
+  | 'Purchase'
+  | 'Sale evaluation';
 
 export interface CreateAppointmentDto {
   clientName: string;
   clientPhone: string;
   clientEmail: string;
-  carId: number;
+  /** Null only for a "Sale evaluation": the customer's car is not in the inventory yet. */
+  carId: number | null;
   appointmentType: AppointmentType;
   appointmentDatetime: string;
 }
@@ -16,6 +18,11 @@ export interface CreateAppointmentDto {
 export interface AppointmentResponseDto {
   appointmentId: number;
   status: string;
+  /**
+   * Token of the "manage your appointment" link (modify, cancel, offer a car).
+   * Returned only once, at creation: the database keeps only its SHA-256 hash.
+   */
+  manageToken: string;
 }
 
 export interface AppointmentListDto {
@@ -25,7 +32,7 @@ export interface AppointmentListDto {
   clientEmail: string;
   carId: number | null;
   car: string | null;
-  appointmentType: AppointmentType | 'Sale evaluation';
+  appointmentType: AppointmentType;
   appointmentDatetime: string;
   status: string;
   employeeId: number | null;

@@ -7,10 +7,11 @@ import { ButtonComponent } from '../../components/button/button.component';
 import { CAR_PLACEHOLDER, ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { SiteHeaderComponent } from '../../components/site-header/site-header.component';
 import { CarService } from '../../services/car.service';
-import { AppointmentService } from '../../services/appointment.service';
+import { AppointmentService, manageLink } from '../../services/appointment.service';
 import { AppointmentModalComponent } from '../../components/appointment-modal/appointment-modal.component';
 import { CreateAppointment } from '../../models/appointment.model';
 import { finalize } from 'rxjs';
+import { apiErrorText } from '../../utils/http-error';
 
 /** How often the page re-checks that the car is still available. */
 const AVAILABILITY_CHECK_MS = 30_000;
@@ -27,7 +28,6 @@ const AVAILABILITY_CHECK_MS = 30_000;
     AppointmentModalComponent
   ],
   templateUrl: './car-detail.component.html',
-  styleUrl: './car-detail.component.css',
 })
 export class CarDetailComponent {
   private readonly carService = inject(CarService);
@@ -63,9 +63,13 @@ export class CarDetailComponent {
   // Displays the result of the appointment request.
   protected readonly appointmentMessage = signal('');
 
+  // Link to the page where the customer can change or cancel the appointment just booked.
+  protected readonly appointmentLink = signal<ReturnType<typeof manageLink> | null>(null);
+
   // Opens the appointment modal.
   protected openModal(): void {
     this.appointmentMessage.set('');
+    this.appointmentLink.set(null);
     this.appointmentModalOpen.set(true);
   }
 
@@ -94,11 +98,12 @@ export class CarDetailComponent {
       this.appointmentMessage.set(
         `Your appointment request was created successfully. Reference: ${response.data.appointmentId}`
       );
+      this.appointmentLink.set(manageLink(response.data.appointmentId, response.data.manageToken));
       this.closeModal();
     },
-    error: () => {
+    error: (error: unknown) => {
       this.appointmentMessage.set(
-        'Unable to create the appointment. Please try again.'
+        apiErrorText(error, 'Unable to create the appointment. Please try again.')
       );
     }
   });

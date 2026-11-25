@@ -1,33 +1,45 @@
-<header class="site-header">
-  <a class="site-header__brand" routerLink="/" aria-label="CarWeb home">
-    <img src="/assets/images/carweb-logo-horizontal.svg" alt="CarWeb" width="169" height="40" />
+<header
+  class="flex items-center gap-x-4 gap-y-3 border-b border-slate-light bg-surface px-4 py-3 max-[760px]:flex-wrap max-[480px]:gap-x-2 max-[480px]:px-3"
+>
+  <a class="flex shrink-0" routerLink="/" aria-label="CarWeb home">
+    <img
+      class="block h-10 w-auto max-[480px]:h-[26px]"
+      src="/assets/images/carweb-logo-horizontal.svg"
+      alt="CarWeb"
+      width="169"
+      height="40"
+    />
   </a>
 
+  <!-- Narrow screens: the search bar moves to its own row below the logo and buttons. -->
   <app-search-bar
-    class="site-header__search"
+    class="mx-auto max-w-[520px] flex-1 max-[760px]:order-1 max-[760px]:max-w-none max-[760px]:basis-full"
     [placeholder]="isSparePartsCatalog ? 'Search spare parts by brand or model' : 'Search cars by brand or model'"
     [searchLabel]="isSparePartsCatalog ? 'Search spare parts' : 'Search cars'"
     (searchSubmit)="onSearch($event)"
   />
 
-  <nav class="site-header__nav" aria-label="Main">
+  <nav class="site-header__nav flex gap-2 max-[760px]:ml-auto max-[480px]:gap-1.5" aria-label="Main">
     <a
       routerLink="/cars"
-      routerLinkActive="site-header__btn--active"
-      class="site-header__btn site-header__btn--secondary"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      class="rounded-lg border border-primary bg-surface px-4 py-[0.55rem] font-semibold whitespace-nowrap text-primary no-underline hover:bg-inferno-tint aria-[current=page]:bg-inferno-tint max-[480px]:px-[0.6rem] max-[480px]:py-[0.45rem] max-[480px]:text-[0.9rem]"
     >
       Catalog
     </a>
     <a
       routerLink="/spare-parts"
-      routerLinkActive="site-header__btn--active"
-      class="site-header__btn site-header__btn--secondary"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      class="rounded-lg border border-primary bg-surface px-4 py-[0.55rem] font-semibold whitespace-nowrap text-primary no-underline hover:bg-inferno-tint aria-[current=page]:bg-inferno-tint max-[480px]:px-[0.6rem] max-[480px]:py-[0.45rem] max-[480px]:text-[0.9rem]"
     >
       Spare parts
     </a>
+    <!-- Icon-only button (employee access): square, same height as the text buttons. -->
     <a
       [routerLink]="auth.isManager() ? '/manager' : '/employee'"
-      class="site-header__btn site-header__btn--primary site-header__btn--icon"
+      class="site-header__btn--icon box-border flex w-10 items-center justify-center rounded-lg border border-primary bg-primary px-0 py-[0.55rem] text-[1.1rem] text-white no-underline hover:border-primary-hover hover:bg-primary-hover max-[480px]:py-[0.45rem] max-[480px]:text-[0.9rem]"
       [title]="auth.isManager() ? 'Manager access' : 'Employee access'"
     >
       <i class="fa-solid fa-user-tie" aria-hidden="true"></i>

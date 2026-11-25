@@ -10,7 +10,6 @@ import {
   selector: 'app-appointment-modal',
   imports: [ReactiveFormsModule],
   templateUrl: './appointment-modal.component.html',
-  styleUrl: './appointment-modal.component.css',
 })
 export class AppointmentModalComponent {
 

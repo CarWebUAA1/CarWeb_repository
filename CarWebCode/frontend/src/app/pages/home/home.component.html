@@ -1,11 +1,21 @@
 <app-site-header />
 
-<main class="home">
-  <section class="hero">
-    <img class="hero__logo" src="/assets/images/carweb-logo.svg" alt="" width="715" height="318" />
-    <h1 class="hero__title">Welcome to CarWeb</h1>
-    <p class="hero__text">Find your next car or sell yours with confidence.</p>
-    <a class="hero__cta" routerLink="/cars">Browse the catalog</a>
+<main class="flex flex-1 items-center justify-center px-4 py-12">
+  <section class="max-w-[560px] text-center">
+    <img
+      class="mx-auto mt-0 mb-6 block h-auto w-[min(280px,80%)]"
+      src="/assets/images/carweb-logo.svg"
+      alt=""
+      width="715"
+      height="318"
+    />
+    <h1 class="m-0 text-graphite">Welcome to CarWeb</h1>
+    <p class="mx-0 mt-3 mb-6 text-text-muted">Find your next car or sell yours with confidence.</p>
+    <a
+      class="inline-block rounded-lg bg-primary px-6 py-3 font-semibold text-white no-underline hover:bg-primary-hover"
+      routerLink="/cars"
+      >Browse the catalog</a
+    >
   </section>
 </main>
 

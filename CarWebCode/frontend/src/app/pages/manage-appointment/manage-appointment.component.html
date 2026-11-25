@@ -1,0 +1,142 @@
+<app-site-header />
+
+<main class="ws-page max-w-[760px]">
+  <h1>Your appointment</h1>
+
+  @if (!linkIsValid() || notFound()) {
+    <section class="ws-panel" role="alert">
+      <h2>This link is not valid</h2>
+      <p class="ws-note">Check that you opened the full link. If the problem continues, please call the dealership.</p>
+      <p><a routerLink="/cars">Go to the catalog</a></p>
+    </section>
+  } @else if (appointment.isLoading()) {
+    <p class="ws-note">Loading your appointment…</p>
+  } @else if (appointment.error()) {
+    <p class="ws-note" role="alert">
+      We couldn't load your appointment.
+      <button type="button" class="btn btn--ghost btn--small" (click)="appointment.reload()">Try again</button>
+    </p>
+  } @else if (appointment.value(); as a) {
+    <p class="ws-intro">Keep this page's link: it is the only way to change or cancel your appointment.</p>
+
+    @if (message(); as m) {
+      <p class="ws-message" [class]="'ws-message--' + m.type" role="status" aria-live="polite">{{ m.text }}</p>
+    }
+
+    <section class="ws-panel summary" aria-label="Appointment details">
+      <dl class="m-0 grid grid-cols-[max-content_1fr] gap-x-5 gap-y-2 [&_dd]:m-0 [&_dt]:font-semibold [&_dt]:text-text-muted">
+        <dt>Reference</dt><dd>#{{ a.appointmentId }}</dd>
+        <dt>Name</dt><dd>{{ a.clientName }}</dd>
+        <dt>Type</dt><dd>{{ a.appointmentType }}</dd>
+        <dt>Date</dt><dd>{{ toDate(a.appointmentDatetime) | date: 'EEEE, MMMM d, y · h:mm a' }}</dd>
+        <dt>Car</dt><dd>{{ a.car ?? '—' }}</dd>
+        <dt>Status</dt><dd><span [class]="pillClass(a.status)">{{ a.status }}</span></dd>
+        @if (a.cancelReason) {
+          <dt>Reason</dt><dd>{{ a.cancelReason }}</dd>
+        }
+      </dl>
+    </section>
+
+    @if (a.canModify) {
+      <section class="ws-panel" aria-labelledby="modify-title">
+        <h2 id="modify-title">Change the date</h2>
+        <form class="ws-form" (submit)="modify($event)">
+          <div class="ws-field">
+            <label for="new-datetime">New date and time</label>
+            <input
+              id="new-datetime"
+              type="datetime-local"
+              required
+              [min]="minDatetime"
+              [max]="maxDatetime"
+              [value]="newDatetime()"
+              (focus)="newDatetime() || startModify()"
+              (input)="newDatetime.set($any($event.target).value)"
+            />
+            <small>From tomorrow up to 30 days. Mon–Fri 9 AM–5 PM · Sat 9 AM–3 PM.</small>
+          </div>
+          <div class="ws-actions ws-actions--form">
+            <button type="submit" class="btn" [disabled]="busy() || !newDatetime()">Move my appointment</button>
+          </div>
+        </form>
+      </section>
+    } @else if (a.canCancel) {
+      <p class="ws-message ws-message--error">
+        Your appointment is less than 2 hours away, so it can no longer be changed online. Please call the dealership.
+      </p>
+    }
+
+    @if (a.appointmentType === 'Sale evaluation' && a.canCancel && !a.saleOffer) {
+      <section class="ws-panel" aria-labelledby="offer-title">
+        <h2 id="offer-title">Offer your car</h2>
+        <p class="ws-note">Send us your car's details and photos to get an estimated price before your evaluation.</p>
+        <p>
+          <a class="btn" routerLink="/sell-my-car" [queryParams]="{ appointment: a.appointmentId, token: token() }">
+            <i class="fa-solid fa-car" aria-hidden="true"></i> Offer my car
+          </a>
+        </p>
+      </section>
+    }
+
+    @if (a.saleOffer; as offer) {
+      <section class="ws-panel" aria-labelledby="sale-title">
+        <h2 id="sale-title">Your sale request #{{ offer.tradeId }}</h2>
+        <dl class="mb-4 m-0 grid grid-cols-[max-content_1fr] gap-x-5 gap-y-2 [&_dd]:m-0 [&_dt]:font-semibold [&_dt]:text-text-muted">
+          <dt>Status</dt><dd><span [class]="pillClass(offer.status)">{{ offer.status }}</span></dd>
+          <dt>Estimated price</dt>
+          <dd>{{ offer.estimatedPrice | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }} <small>(Estimated – subject to inspection)</small></dd>
+          <dt>Your asking price</dt><dd>{{ offer.listingPrice | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</dd>
+        </dl>
+
+        @if (offer.status === 'In progress') {
+          <form class="price-form ws-form max-w-[420px]" (submit)="changeListingPrice($event)">
+            <div class="ws-field">
+              <label for="listing-price">New asking price (MXN)</label>
+              <input
+                id="listing-price"
+                type="number"
+                min="20000"
+                step="100"
+                [max]="maxListingPrice()"
+                required
+                [value]="listingPrice() ?? ''"
+                (input)="listingPrice.set($any($event.target).valueAsNumber || null)"
+              />
+              <small>Up to {{ maxListingPrice() | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}. It can change once every 24 hours.</small>
+            </div>
+            <div class="ws-actions ws-actions--form">
+              <button type="submit" class="btn" [disabled]="busy() || listingPrice() === null">Update price</button>
+            </div>
+          </form>
+        }
+      </section>
+    }
+
+    @if (a.canCancel) {
+      <section class="ws-panel" aria-labelledby="cancel-title">
+        <h2 id="cancel-title">Cancel the appointment</h2>
+        <form class="ws-form" (submit)="cancel($event)">
+          <div class="ws-field ws-field--wide">
+            <label for="cancel-reason">Reason (optional)</label>
+            <textarea
+              id="cancel-reason"
+              rows="2"
+              maxlength="255"
+              [value]="cancelReason()"
+              (input)="cancelReason.set($any($event.target).value)"
+            ></textarea>
+          </div>
+          <label class="ws-check ws-field--wide">
+            <input type="checkbox" [checked]="cancelConfirmed()" (change)="cancelConfirmed.set($any($event.target).checked)" />
+            Yes, I want to cancel this appointment
+          </label>
+          <div class="ws-actions ws-actions--form">
+            <button type="submit" class="btn" [disabled]="busy() || !cancelConfirmed()">Cancel appointment</button>
+          </div>
+        </form>
+      </section>
+    }
+  }
+</main>
+
+<app-site-footer />

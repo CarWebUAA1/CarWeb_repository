@@ -15,12 +15,73 @@ function toSqlDatetime(date: Date): string {
 export class AppointmentsController {
     constructor() {}
 
+    // GET /appointments/:id/manage
+    // Header: X-Manage-Token: token from the email link (kept out of the URL so it is not logged)
+    // What the customer sees on the "manage your appointment" page.
+    public async getManagedAppointment(req: Request, res: Response) {
+        const id = Number(req.params["id"]);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ message: "this id is not valid" });
+            return;
+        }
+
+        const token = req.get("X-Manage-Token");
+        if (typeof token !== "string" || !token.trim()) {
+            res.status(400).json({ message: "token is required" });
+            return;
+        }
+
+        try {
+            const [rows] = await pool.execute<RowDataPacket[]>(
+                "select a.appointment_id, a.client_name, a.appointment_type, a.status, a.cancel_reason, DATE_FORMAT(a.appointment_datetime, '%Y-%m-%d %H:%i:%s') as appointment_datetime, a.car_id, case when c.car_id is null then null else concat(c.brand, ' ', c.model, ' ', c.year) end as car from appointments a left join cars c on c.car_id = a.car_id where a.appointment_id = ? and a.manage_token_hash = SHA2(?, 256)",
+                [id, token.trim()],
+            );
+            const appointment = rows[0];
+            if (!appointment) {
+                res.status(404).json({ message: "appointment has not been found" });
+                return;
+            }
+
+            //the sale request created from this appointment, if any (OfferMyCarForSale)
+            const [trades] = await pool.execute<RowDataPacket[]>(
+                "select trade_id, status, estimated_price, listing_price, DATE_FORMAT(last_price_edit, '%Y-%m-%d %H:%i:%s') as last_price_edit from trades where appointment_id = ? and trade_type = 'Sale' order by trade_id desc limit 1",
+                [id],
+            );
+            const trade = trades[0];
+
+            const appointmentDate = new Date(String(appointment["appointment_datetime"]).replace(" ", "T"));
+            const active = MODIFIABLE.includes(appointment["status"]);
+
+            res.status(200).json({
+                appointmentId: appointment["appointment_id"],
+                clientName: appointment["client_name"],
+                appointmentType: appointment["appointment_type"],
+                appointmentDatetime: appointment["appointment_datetime"],
+                status: appointment["status"],
+                cancelReason: appointment["cancel_reason"],
+                carId: appointment["car_id"],
+                car: appointment["car"],
+                canCancel: active,
+                canModify: active && appointmentDate.getTime() - Date.now() >= TWO_HOURS,
+                saleOffer: trade
+                    ? {
+                        tradeId: trade["trade_id"],
+                        status: trade["status"],
+                        estimatedPrice: trade["estimated_price"] === null ? null : Number(trade["estimated_price"]),
+                        listingPrice: trade["listing_price"] === null ? null : Number(trade["listing_price"]),
+                        lastPriceEdit: trade["last_price_edit"],
+                    }
+                    : null,
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "internal server error" });
+        }
+    }
+
     // PATCH /appointments/:id/modify
     // Body: { "token": "token from the email link", "newDatetime": "2026-11-25 10:30" }
     public async modifyAppointment(req: Request, res: Response) {
-    // PATCH /appointments/:id/cancel
-    // Body: { "userId": 1, "confirm": true, "reason": "opcional" }
-    public async cancelAppointment(req: Request, res: Response) {
         const id = Number(req.params["id"]);
         if (!Number.isInteger(id) || id <= 0) {
             res.status(400).json({ message: "this id is not valid" });
@@ -145,6 +206,90 @@ export class AppointmentsController {
             res.status(500).json({ message: "internal server error" });
         } finally {
             
+            connection.release();
+        }
+    }
+
+    // PATCH /appointments/:id/cancel
+    // Body: { "token": "token from the email link", "confirm": true, "reason": "optional" }
+    public async cancelAppointment(req: Request, res: Response) {
+        const id = Number(req.params["id"]);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ message: "this id is not valid" });
+            return;
+        }
+
+        const { token, confirm, reason } = req.body ?? {};
+
+        // customers have no account: the token in their email link proves the appointment is theirs
+        if (typeof token !== "string" || !token.trim()) {
+            res.status(400).json({ message: "token is required" });
+            return;
+        }
+
+        if (confirm !== true) {
+            res.status(400).json({ message: "the cancellation must be confirmed" });
+            return;
+        }
+
+        if (reason !== undefined && reason !== null && (typeof reason !== "string" || reason.trim().length > 255)) {
+            res.status(400).json({ message: "reason must be a text of at most 255 characters" });
+            return;
+        }
+        const cleanReason = typeof reason === "string" && reason.trim() ? reason.trim() : null;
+
+        //the status, the notification and the log save together: all or nothing
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const [rows] = await connection.execute<RowDataPacket[]>(
+                "select client_email, employee_id, status, DATE_FORMAT(appointment_datetime, '%Y-%m-%d %H:%i:%s') as appointment_datetime from appointments where appointment_id = ? and manage_token_hash = SHA2(?, 256) for update",
+                [id, token.trim()],
+            );
+            const appointment = rows[0];
+
+            //wrong id or wrong token: same answer, so nobody can guess other appointments
+            if (!appointment) {
+                await connection.rollback();
+                res.status(404).json({ message: "appointment has not been found" });
+                return;
+            }
+
+            //attended, completed, rejected or already cancelled appointments cannot be cancelled
+            if (!MODIFIABLE.includes(appointment["status"])) {
+                await connection.rollback();
+                res.status(409).json({ message: `an appointment with status ${appointment["status"]} cannot be cancelled` });
+                return;
+            }
+
+            //frees the slot: only Pending and Confirmed appointments take one
+            await connection.execute(
+                "update appointments set status = 'Cancelled', cancel_reason = ? where appointment_id = ?",
+                [cleanReason, id],
+            );
+
+            //notifies the assigned employee, if there is one
+            if (appointment["employee_id"]) {
+                await connection.execute(
+                    "insert into notifications (staff_id, message) values (?, ?)",
+                    [appointment["employee_id"], `Appointment ${id} on ${appointment["appointment_datetime"]} was cancelled by the customer${cleanReason ? `: ${cleanReason}` : ""}`.slice(0, 255)],
+                );
+            }
+
+            //log: log_date is filled by MySQL with the local date and time
+            await connection.execute(
+                "insert into appointment_logs (client_email, appointment_id, action, previous_datetime) values (?,?,?,?)",
+                [appointment["client_email"], id, "Cancelled", appointment["appointment_datetime"]],
+            );
+
+            await connection.commit();
+            res.status(200).json({ message: "appointment has been cancelled", appointmentId: id, status: "Cancelled" });
+        } catch (error) {
+            await connection.rollback();
+            console.error(error);
+            res.status(500).json({ message: "internal server error" });
+        } finally {
             connection.release();
         }
     }

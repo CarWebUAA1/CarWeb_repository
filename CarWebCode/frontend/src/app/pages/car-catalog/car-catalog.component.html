@@ -1,54 +1,54 @@
 <app-site-header />
-<main class="catalog">
+<main class="mx-auto box-content max-w-[1200px] px-4 pt-6 pb-12">
   <h1>Car catalog</h1>
 
   @if (searchTerm()) {
-    <p class="catalog__search">
+    <p class="catalog__search mx-0 -mt-2 mb-5 text-text-muted">
       Results for “{{ searchTerm() }}”
-      <a routerLink="/cars">Clear search</a>
+      <a class="ml-3 font-semibold" routerLink="/cars">Clear search</a>
     </p>
   }
 
   @if (cars.isLoading()) {
-    <p class="catalog__status">Loading cars…</p>
+    <p class="catalog__status py-8 text-center text-text-muted">Loading cars…</p>
   } @else if (cars.error()) {
-    <div class="catalog__status" role="alert">
+    <div class="catalog__status py-8 text-center text-text-muted" role="alert">
       <p>We couldn't load the catalog.</p>
-      <button type="button" (click)="cars.reload()">Try again</button>
+      <button type="button" class="btn" (click)="cars.reload()">Try again</button>
     </div>
   } @else if (cars.hasValue()) {
     @let result = cars.value();
 
     @if (result.total === 0 && searchTerm()) {
-      <p class="catalog__status">
+      <p class="catalog__status py-8 text-center text-text-muted">
         No cars match your search. <a routerLink="/cars">Clear search</a>
       </p>
     } @else if (result.total === 0) {
-      <p class="catalog__status">There are no cars available right now.</p>
+      <p class="catalog__status py-8 text-center text-text-muted">There are no cars available right now.</p>
     } @else if (result.data.length === 0) {
-      <p class="catalog__status">
+      <p class="catalog__status py-8 text-center text-text-muted">
         This page doesn't exist.
         <a routerLink="/cars" [queryParams]="{ page: null }" queryParamsHandling="merge">
           Back to the first page
         </a>
       </p>
     } @else {
-      <ul class="catalog__grid">
+      <ul class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0">
         @for (car of result.data; track car.id) {
           <li><app-car-card [car]="car" /></li>
         }
       </ul>
 
       @if (result.totalPages > 1) {
-        <nav class="pagination" aria-label="Catalog pagination">
+        <nav class="pagination mt-8 flex items-center justify-center gap-6" aria-label="Catalog pagination">
           @if (result.page > 1) {
-            <a routerLink="/cars" [queryParams]="{ page: result.page - 1 }" queryParamsHandling="merge">
+            <a class="font-semibold text-primary" routerLink="/cars" [queryParams]="{ page: result.page - 1 }" queryParamsHandling="merge">
               ← Previous
             </a>
           }
           <span>Page {{ result.page }} of {{ result.totalPages }}</span>
           @if (result.page < result.totalPages) {
-            <a routerLink="/cars" [queryParams]="{ page: result.page + 1 }" queryParamsHandling="merge">
+            <a class="font-semibold text-primary" routerLink="/cars" [queryParams]="{ page: result.page + 1 }" queryParamsHandling="merge">
               Next →
             </a>
           }

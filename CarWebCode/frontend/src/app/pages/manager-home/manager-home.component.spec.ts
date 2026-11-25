@@ -22,7 +22,7 @@ describe('ManagerHomeComponent', () => {
 
   it('greets the logged-in manager and links to the spare parts catalog and registration', () => {
     expect(el.querySelector('h1')?.textContent).toContain('Welcome, Luis');
-    expect(el.querySelector('.manager-header__badge')?.textContent).toContain('Manager portal');
+    expect(el.querySelector('.portal-header__badge')?.textContent).toContain('Manager portal');
 
     const sparePartsLinks = Array.from(el.querySelectorAll<HTMLAnchorElement>('.task__link'));
     const catalogLink = sparePartsLinks.find((link) => link.getAttribute('href') === '/spare-parts');

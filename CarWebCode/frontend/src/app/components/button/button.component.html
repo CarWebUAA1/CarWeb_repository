@@ -1,3 +1,8 @@
-<button class="btn" [type]="type()" [disabled]="disabled()" (click)="clicked.emit($event)">
+<button
+  class="cursor-pointer rounded-lg border-0 bg-primary px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+  [type]="type()"
+  [disabled]="disabled()"
+  (click)="clicked.emit($event)"
+>
   <ng-content />
 </button>

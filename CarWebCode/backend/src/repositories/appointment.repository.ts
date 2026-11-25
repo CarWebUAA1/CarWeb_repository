@@ -60,18 +60,22 @@ export class MySqlAppointmentRepository implements AppointmentRepository {
     try {
       await connection.beginTransaction();
 
-      const [cars] = await connection.execute<CarAvailabilityRow[]>(
-        `SELECT car_id, status
-         FROM cars
-         WHERE car_id = ?
-         FOR UPDATE`,
-        [appointment.carId]
-      );
+      // A sale evaluation may have no car yet; any other appointment needs an available one.
+      let car: CarAvailabilityRow | undefined;
+      if (appointment.carId !== null) {
+        const [cars] = await connection.execute<CarAvailabilityRow[]>(
+          `SELECT car_id, status
+           FROM cars
+           WHERE car_id = ?
+           FOR UPDATE`,
+          [appointment.carId]
+        );
 
-      const car = cars[0];
+        car = cars[0];
 
-      if (!car) {
-        throw new Error("CAR_NOT_FOUND");
+        if (!car) {
+          throw new Error("CAR_NOT_FOUND");
+        }
       }
       const [existingAppointments] = await connection.execute<RowDataPacket[]>(
         `SELECT appointment_id
@@ -90,7 +94,7 @@ if (existingAppointments.length > 0) {
   throw new Error("DUPLICATE_APPOINTMENT");
 }
 
-      if (car.status !== "Available") {
+      if (car && car.status !== "Available") {
         throw new Error("CAR_NOT_AVAILABLE");
       }
 
@@ -184,7 +188,9 @@ if (existingAppointments.length > 0) {
        SET
          status = ?,
          decision_by = ?,
-         cancel_reason = ?
+         cancel_reason = ?,
+         -- whoever confirms becomes the responsible employee, unless one was already assigned
+         employee_id = IF(? = 'Confirmed', COALESCE(employee_id, ?), employee_id)
        WHERE appointment_id = ?
          AND (
            (status = 'Pending'
@@ -196,6 +202,8 @@ if (existingAppointments.length > 0) {
         status,
         staffId,
         status === "Confirmed" ? null : reason ?? null,
+        status,
+        staffId,
         appointmentId,
         status,
         status

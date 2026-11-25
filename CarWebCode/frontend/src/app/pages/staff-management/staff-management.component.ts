@@ -9,7 +9,7 @@ import { UserService } from '../../services/user.service';
   selector: 'app-staff-management',
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './staff-management.component.html',
-  styleUrl: './staff-management.component.css',
+  host: { class: 'block min-h-dvh text-text' },
 })
 export class StaffManagementComponent implements OnInit {
   private readonly fb = inject(FormBuilder);

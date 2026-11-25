@@ -17,7 +17,36 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'employee/profile',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'manager/staff',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'employee/appointments',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'employee/test-drives',
+    renderMode: RenderMode.Client
+  },
+  {
     path: 'manager',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'manager/inventory',
+    renderMode: RenderMode.Client
+  },
+  // Customer pages: they read the token from the link, which only the browser has.
+  {
+    path: 'appointments/:id/manage',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'sell-my-car',
     renderMode: RenderMode.Client
   },
   {

@@ -10,7 +10,7 @@ import { ManagerDataService } from '../../services/manager-data.service';
   selector: 'app-manager-table',
   imports: [RouterLink, SiteFooterComponent],
   templateUrl: './manager-table.component.html',
-  styleUrl: './manager-table.component.css',
+  host: { class: 'flex min-h-dvh flex-col' },
 })
 export class ManagerTableComponent {
   private readonly route = inject(ActivatedRoute);

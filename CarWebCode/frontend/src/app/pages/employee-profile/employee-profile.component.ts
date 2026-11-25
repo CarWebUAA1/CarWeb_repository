@@ -10,7 +10,7 @@ import { UserService } from '../../services/user.service';
   selector: 'app-employee-profile',
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './employee-profile.component.html',
-  styleUrl: './employee-profile.component.css',
+  host: { class: 'block min-h-dvh bg-page' },
 })
 export class EmployeeProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);

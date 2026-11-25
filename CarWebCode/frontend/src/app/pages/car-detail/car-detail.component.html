@@ -1,60 +1,67 @@
 <app-site-header />
-<main class="detail">
-  <a class="detail__back" routerLink="/cars">← Back to the catalog</a>
+<main class="mx-auto box-content max-w-[1100px] px-4 pt-6 pb-12">
+  <a class="text-primary" routerLink="/cars">← Back to the catalog</a>
 
   @if (car.hasValue()) {
     @let c = car.value();
 
     @if (c === null) {
-      <p class="detail__status">We couldn't find this car. It may no longer be listed.</p>
+      <p class="py-8 text-center">We couldn't find this car. It may no longer be listed.</p>
     } @else {
       @if (!c.isAvailable) {
-        <p class="detail__warning" role="alert">
+        <p class="detail__warning mx-0 my-4 rounded-lg bg-inferno-tint px-4 py-3 font-semibold text-inferno-dark" role="alert">
           This car is no longer available ({{ c.status }}). You can't schedule an appointment or buy it.
         </p>
       }
 
-      <div class="detail__layout">
-        <section class="gallery" aria-label="Car photos">
+      <div class="mt-4 grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-8 max-[800px]:grid-cols-1">
+        <section aria-label="Car photos">
           <img
-            class="gallery__main"
+            class="gallery__main aspect-[4/3] w-full rounded-xl bg-slate-light object-cover"
             appImgFallback
             [src]="mainPhotoUrl()"
             [alt]="c.brand + ' ' + c.model"
           />
           @if (c.photos.length > 1) {
-            <div class="gallery__thumbs">
+            <div class="mt-2 flex flex-wrap gap-2">
               @for (photo of c.photos; track photo.id; let i = $index) {
                 <button
                   type="button"
-                  class="gallery__thumb"
-                  [class.gallery__thumb--active]="i === selectedPhoto()"
+                  class="gallery__thumb box-content w-[88px] cursor-pointer overflow-hidden rounded-lg border-2 border-transparent p-0 aria-pressed:border-primary"
+                  [attr.aria-pressed]="i === selectedPhoto()"
                   [attr.aria-label]="'View photo ' + (i + 1)"
                   (click)="selectedPhoto.set(i)"
                 >
-                  <img appImgFallback [src]="photo.url" alt="" loading="lazy" />
+                  <img class="block aspect-[4/3] w-full object-cover" appImgFallback [src]="photo.url" alt="" loading="lazy" />
                 </button>
               }
             </div>
           }
         </section>
 
-        <section class="info">
-          <h1 class="info__title">{{ c.brand }} {{ c.model }} {{ c.year }}</h1>
-          <p class="info__price">{{ c.price | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</p>
+        <section>
+          <h1 class="m-0">{{ c.brand }} {{ c.model }} {{ c.year }}</h1>
+          <p class="mx-0 mt-2 mb-4 text-[1.75rem] font-bold text-primary">{{ c.price | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</p>
 
-          <div class="info__actions">
-         <app-button
-            [disabled]="!c.isAvailable"
-            (clicked)="openModal()"
-            >Schedule appointment
-            </app-button>
-        <app-button [disabled]="true">Buy</app-button>
+          <div class="flex gap-3">
+            <app-button [disabled]="!c.isAvailable" (clicked)="openModal()">Schedule appointment</app-button>
+            <app-button [disabled]="true">Buy</app-button>
           </div>
 
-          <p class="info__hint">Scheduling an appointment and buying will be available soon.</p>
+          @if (appointmentMessage()) {
+            <p class="mx-0 mt-3 mb-0 rounded-lg bg-slate-light px-[0.85rem] py-[0.6rem] font-semibold" role="status" aria-live="polite">
+              {{ appointmentMessage() }}
+              @if (appointmentLink(); as link) {
+                <br />
+                <a [routerLink]="link.path" [queryParams]="link.query">Manage your appointment</a>
+                — keep this link: it is the only way to change or cancel it.
+              }
+            </p>
+          }
 
-          <dl class="specs">
+          <p class="mx-0 mt-2 mb-6 text-sm text-text-muted">Buying online will be available soon.</p>
+
+          <dl class="specs grid grid-cols-[max-content_1fr] gap-x-4 gap-y-[0.4rem] [&_dd]:m-0 [&_dt]:text-text-muted">
             <dt>Brand</dt><dd>{{ c.brand }}</dd>
             <dt>Model</dt><dd>{{ c.model }}</dd>
             <dt>Year</dt><dd>{{ c.year }}</dd>
@@ -70,28 +77,21 @@
       </div>
 
       @if (appointmentModalOpen()) {
-         <app-appointment-modal
-
-          [car]="{
-          id: c.id,
-          brand: c.brand,
-          model: c.model,
-          year: c.year
-          }"
-        [isSubmitting]="appointmentSubmitting()"
-        (closed)="closeModal()"
-        (submitted)="submitAppointment($event)"
-
-          />
-}
+        <app-appointment-modal
+          [car]="{ id: c.id, brand: c.brand, model: c.model, year: c.year }"
+          [isSubmitting]="appointmentSubmitting()"
+          (closed)="closeModal()"
+          (submitted)="submitAppointment($event)"
+        />
+      }
 
     }
   } @else if (car.error()) {
-    <div class="detail__status" role="alert">
+    <div class="py-8 text-center" role="alert">
       <p>We couldn't load this car's information.</p>
-      <button type="button" (click)="car.reload()">Try again</button>
+      <button type="button" class="btn" (click)="car.reload()">Try again</button>
     </div>
   } @else {
-    <p class="detail__status">Loading…</p>
+    <p class="py-8 text-center">Loading…</p>
   }
 </main>

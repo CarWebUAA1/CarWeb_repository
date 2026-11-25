@@ -7,6 +7,7 @@ import { SiteHeaderComponent } from '../../components/site-header/site-header.co
   selector: 'app-home',
   imports: [RouterLink, SiteHeaderComponent, SiteFooterComponent],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css',
+  // Header on top, footer at the bottom, content fills the space in between.
+  host: { class: 'flex min-h-dvh flex-col' },
 })
 export default class HomeComponent {}

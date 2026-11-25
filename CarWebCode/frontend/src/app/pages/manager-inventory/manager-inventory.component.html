@@ -1,0 +1,203 @@
+<header class="flex items-center justify-between gap-4 bg-graphite px-5 py-[0.85rem] font-semibold text-white">
+  <a class="ws-back text-white" routerLink="/manager"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Manager home</a>
+  <span><i class="fa-solid fa-warehouse" aria-hidden="true"></i> Car inventory</span>
+</header>
+
+<main class="ws-page">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1>Car inventory</h1>
+      <p class="ws-intro">Add, edit, re-price and remove cars. The public catalog shows the available ones with a sale price.</p>
+    </div>
+    <button type="button" class="btn" (click)="beginCreate()">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i> Add car
+    </button>
+  </div>
+
+  @if (message(); as m) {
+    <p class="ws-message" [class]="'ws-message--' + m.type" role="status" aria-live="polite">{{ m.text }}</p>
+  }
+
+  @if (editing(); as e) {
+    <section class="ws-panel" aria-labelledby="form-title">
+      <h2 id="form-title">{{ e === 'new' ? 'Add a car' : 'Edit car #' + e.carId }}</h2>
+      <form class="ws-form" [formGroup]="carForm" (submit)="saveCar($event)">
+        <div class="ws-field">
+          <label for="vin">VIN</label>
+          <input id="vin" formControlName="vin" maxlength="17" />
+          @if (carForm.controls.vin.touched && carForm.controls.vin.invalid) {
+            <span class="ws-error">17 letters and numbers, without I, O or Q.</span>
+          }
+        </div>
+        <div class="ws-field"><label for="plates">Plates (optional)</label><input id="plates" formControlName="plates" maxlength="10" /></div>
+        <div class="ws-field"><label for="brand">Brand</label><input id="brand" formControlName="brand" /></div>
+        <div class="ws-field"><label for="model">Model</label><input id="model" formControlName="model" /></div>
+        <div class="ws-field">
+          <label for="year">Year</label>
+          <input id="year" type="number" formControlName="year" min="1990" [max]="maxYear" />
+          @if (carForm.controls.year.touched && carForm.controls.year.invalid) {
+            <span class="ws-error">Between 1990 and {{ maxYear }}.</span>
+          }
+        </div>
+        <div class="ws-field"><label for="version">Version (optional)</label><input id="version" formControlName="version" /></div>
+        <div class="ws-field"><label for="series">Series (optional)</label><input id="series" formControlName="series" /></div>
+        <div class="ws-field"><label for="mileage">Mileage (km)</label><input id="mileage" type="number" formControlName="mileage" min="0" /></div>
+        <div class="ws-field">
+          <label for="fuel">Fuel type</label>
+          <select id="fuel" formControlName="fuelType">
+            @for (f of fuelTypes; track f) { <option [value]="f">{{ f }}</option> }
+          </select>
+        </div>
+        <div class="ws-field">
+          <label for="transmission">Transmission</label>
+          <select id="transmission" formControlName="transmission">
+            @for (t of transmissions; track t) { <option [value]="t">{{ t }}</option> }
+          </select>
+        </div>
+        <div class="ws-field"><label for="color">Color</label><input id="color" formControlName="color" /></div>
+        <div class="ws-field">
+          <label for="tires">Tire condition</label>
+          <select id="tires" formControlName="tireCondition">
+            <option value="">Not checked</option>
+            @for (t of tireConditions; track t) { <option [value]="t">{{ t }}</option> }
+          </select>
+        </div>
+        <div class="ws-field">
+          <label for="status">Status</label>
+          <select id="status" formControlName="status">
+            @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+          </select>
+        </div>
+        <div class="ws-field"><label for="purchase">Purchase price (MXN)</label><input id="purchase" type="number" formControlName="purchasePrice" min="0.01" step="0.01" /></div>
+        <div class="ws-field"><label for="base">Base price (optional)</label><input id="base" type="number" formControlName="basePrice" min="0.01" step="0.01" /></div>
+        <div class="ws-field"><label for="sale">Sale price (MXN)</label><input id="sale" type="number" formControlName="salePrice" min="0.01" step="0.01" /></div>
+        <label class="ws-check"><input type="checkbox" formControlName="testDriveAuthorized" /> Test drives allowed</label>
+        <div class="ws-field ws-field--wide">
+          <label for="history">Service history (optional)</label>
+          <textarea id="history" rows="2" formControlName="serviceHistory"></textarea>
+        </div>
+        @if (saleBelowPurchase()) {
+          <label class="ws-check ws-field--wide text-inferno-dark">
+            <input type="checkbox" formControlName="confirmLowerSalePrice" />
+            The sale price is lower than the purchase price. I confirm it.
+          </label>
+        }
+        <div class="ws-actions ws-actions--form">
+          <button type="submit" class="btn" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save car' }}</button>
+          <button type="button" class="btn btn--ghost" (click)="closePanels()">Cancel</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  @if (pricing(); as car) {
+    <section class="ws-panel" aria-labelledby="price-title">
+      <h2 id="price-title">Change the price of {{ car.brand }} {{ car.model }} {{ car.year }} (#{{ car.carId }})</h2>
+      <form class="price-form ws-form max-w-[640px]" (submit)="savePrice($event)">
+        <div class="ws-field">
+          <label for="new-price">Sale price (MXN)</label>
+          <input id="new-price" type="number" min="0.01" step="0.01" required [value]="newPrice() ?? ''" (input)="newPrice.set($any($event.target).valueAsNumber || null)" />
+          <small>Purchase price: {{ car.purchasePrice | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</small>
+        </div>
+        @if (priceBelowPurchase()) {
+          <label class="ws-check ws-field--wide text-inferno-dark">
+            <input type="checkbox" [checked]="confirmLowerPrice()" (change)="confirmLowerPrice.set($any($event.target).checked)" />
+            The sale price is lower than the purchase price. I confirm it.
+          </label>
+        }
+        <div class="ws-actions ws-actions--form">
+          <button type="submit" class="btn" [disabled]="saving() || (priceBelowPurchase() && !confirmLowerPrice())">Save price</button>
+          <button type="button" class="btn btn--ghost" (click)="closePanels()">Cancel</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <section class="ws-panel" aria-label="Cars">
+    <div class="mb-4 flex flex-wrap items-center gap-3 [&_.ws-field]:min-w-[220px]">
+      <label class="ws-field">
+        <span class="visually-hidden">Search</span>
+        <input type="search" placeholder="Search brand, model, VIN, plates or #" [value]="search()" (input)="search.set($any($event.target).value)" />
+      </label>
+      <label class="ws-field">
+        <span class="visually-hidden">Status</span>
+        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+          <option value="">All statuses</option>
+          @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </label>
+      <label class="ws-check">
+        <input type="checkbox" [checked]="includeOutOfStock()" (change)="includeOutOfStock.set($any($event.target).checked)" />
+        Show removed cars
+      </label>
+    </div>
+
+    @if (cars.isLoading()) {
+      <p class="ws-note">Loading the inventory…</p>
+    } @else if (cars.error()) {
+      <p class="ws-note" role="alert">
+        We couldn't load the inventory.
+        <button type="button" class="btn btn--ghost btn--small" (click)="cars.reload()">Try again</button>
+      </p>
+    } @else if (visible().length === 0) {
+      <p class="ws-note">No cars match.</p>
+    } @else {
+      <div class="ws-table-wrapper">
+        <table class="ws-table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Car</th>
+              <th scope="col">VIN · Plates</th>
+              <th scope="col">Mileage</th>
+              <th scope="col">Status</th>
+              <th scope="col">Purchase</th>
+              <th scope="col">Sale</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (car of visible(); track car.carId) {
+              <tr [class.is-selected]="pricing()?.carId === car.carId || $any(editing())?.carId === car.carId">
+                <td>{{ car.carId }}</td>
+                <td>
+                  <strong>{{ car.brand }} {{ car.model }} {{ car.year }}</strong><br />
+                  <small>{{ car.version ?? '' }} {{ car.color }}</small>
+                </td>
+                <td><code class="text-[0.85rem]">{{ car.vin }}</code><br /><small>{{ car.plates ?? '—' }}</small></td>
+                <td>{{ car.mileage | number }} km</td>
+                <td>
+                  <span [class]="pillClass(car.status)">{{ car.status }}</span>
+                  @if (car.inventoryStatus === 'Out of stock') { <br /><small>Removed</small> }
+                </td>
+                <td>{{ car.purchasePrice | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</td>
+                <td>{{ (car.salePrice | currency: 'MXN' : 'symbol-narrow' : '1.0-0') ?? '—' }}</td>
+                <td>
+                  @if (car.inventoryStatus === 'In stock') {
+                    @if (deletingId() === car.carId) {
+                      <div class="ws-actions flex-nowrap">
+                        <span>Remove?</span>
+                        <button type="button" class="btn btn--small" [disabled]="saving()" (click)="remove(car)">Yes</button>
+                        <button type="button" class="btn btn--ghost btn--small" (click)="deletingId.set(null)">No</button>
+                      </div>
+                    } @else {
+                      <div class="ws-actions flex-nowrap">
+                        <button type="button" class="btn btn--ghost btn--small" (click)="beginEdit(car)">Edit</button>
+                        <button type="button" class="btn btn--ghost btn--small" (click)="beginPrice(car)">Price</button>
+                        <button type="button" class="btn btn--ghost btn--small" [attr.aria-label]="'Remove car ' + car.carId" (click)="deletingId.set(car.carId)">
+                          <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>
+
+<app-site-footer />

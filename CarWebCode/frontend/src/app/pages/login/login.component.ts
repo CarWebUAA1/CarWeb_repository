@@ -9,7 +9,7 @@ import { AuthService, isEmployeeRole, isManagerRole } from '../../services/auth.
   selector: 'app-login',
   imports: [FormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrl: '../auth-form.css',
+  host: { class: 'box-border flex min-h-dvh items-center justify-center bg-page p-5' },
 })
 export class LoginComponent {
   private readonly auth = inject(AuthService);

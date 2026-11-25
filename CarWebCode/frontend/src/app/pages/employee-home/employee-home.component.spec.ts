@@ -22,7 +22,7 @@ describe('EmployeeHomeComponent', () => {
 
   it('greets the logged-in employee', () => {
     expect(el.querySelector('h1')?.textContent).toContain('Welcome, Ana');
-    expect(el.querySelector('.employee-header__name')?.textContent).toContain('Ana');
+    expect(el.querySelector('.portal-header__name')?.textContent).toContain('Ana');
   });
 
   it('lists employee tasks and links to the spare parts catalog', () => {
@@ -31,11 +31,13 @@ describe('EmployeeHomeComponent', () => {
     const links = Array.from(el.querySelectorAll<HTMLAnchorElement>('.task__link'));
     expect(links.some((link) => link.getAttribute('href') === '/employee/profile')).toBe(true);
     expect(links.some((link) => link.getAttribute('href') === '/spare-parts')).toBe(true);
+    expect(links.some((link) => link.getAttribute('href') === '/employee/appointments')).toBe(true);
+    expect(links.some((link) => link.getAttribute('href') === '/employee/test-drives')).toBe(true);
   });
 
   it('logs out and goes back to the login', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    el.querySelector<HTMLButtonElement>('.employee-header__logout')!.click();
+    el.querySelector<HTMLButtonElement>('.portal-header__logout')!.click();
     expect(sessionStorage.getItem('carweb.user')).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/login']);
   });

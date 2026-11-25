@@ -30,6 +30,7 @@ export class AppointmentService {
       return {
         appointmentId,
         status: "Pending",
+        manageToken,
       };
 
         } catch (error) {

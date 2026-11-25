@@ -1,16 +1,20 @@
 <app-site-header />
-<main class="detail">
-  <a class="detail__back" routerLink="/spare-parts">← Back to the catalog</a>
+<main class="mx-auto box-content max-w-[900px] px-4 pt-6 pb-12">
+  <a class="mb-4 inline-block font-semibold text-primary" routerLink="/spare-parts">← Back to the catalog</a>
 
   @if (part.hasValue()) {
     @let item = part.value();
 
-    <section class="detail__card">
-      <span class="detail__eyebrow">Spare part #{{ item.id }}</span>
-      <h1>{{ item.brand }} {{ item.model }}</h1>
-      <p class="detail__price">{{ item.price | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}</p>
+    <section class="rounded-xl bg-surface p-8 shadow-[0_2px_12px_rgb(0_0_0/10%)] max-[560px]:p-5">
+      <span class="text-text-muted">Spare part #{{ item.id }}</span>
+      <h1 class="mx-0 my-2">{{ item.brand }} {{ item.model }}</h1>
+      <p class="mx-0 mt-0 mb-6 text-[1.5rem] font-bold text-primary">
+        {{ item.price | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}
+      </p>
 
-      <dl class="specs">
+      <dl
+        class="specs m-0 grid grid-cols-[minmax(120px,1fr)_2fr] gap-x-4 gap-y-3 [&_dd]:m-0 [&_dt]:font-semibold [&_dt]:text-text-muted max-[560px]:grid-cols-1 max-[560px]:gap-[0.35rem] max-[560px]:[&_dd]:mb-[0.65rem]"
+      >
         <dt>Brand</dt><dd>{{ item.brand }}</dd>
         <dt>Model</dt><dd>{{ item.model }}</dd>
         <dt>Status</dt><dd>{{ item.status }}</dd>
@@ -19,15 +23,23 @@
       </dl>
 
       @if (canRecordMovement()) {
-        <button class="movement-button" type="button" (click)="toggleMovementForm()">
+        <button
+          class="movement-button mt-6 cursor-pointer rounded-lg border-0 bg-primary px-4 py-3 font-semibold text-white"
+          type="button"
+          (click)="toggleMovementForm()"
+        >
           {{ showMovementForm() ? 'Cancel stock movement' : 'Record stock movement' }}
         </button>
 
         @if (showMovementForm()) {
-          <form class="movement-form" (submit)="$event.preventDefault(); recordMovement()">
+          <form
+            class="movement-form mt-4 grid max-w-[420px] gap-[0.6rem]"
+            (submit)="$event.preventDefault(); recordMovement()"
+          >
             <label for="movementType">Movement</label>
             <select
               id="movementType"
+              class="rounded-[0.4rem] border border-[#aeb8c5] bg-white p-[0.65rem]"
               [value]="movementType()"
               (change)="setMovementType($event)"
             >
@@ -38,6 +50,7 @@
             <label for="movementReason">Reason</label>
             <select
               id="movementReason"
+              class="rounded-[0.4rem] border border-[#aeb8c5] bg-white p-[0.65rem]"
               [value]="reason()"
               (change)="setReason($event)"
             >
@@ -46,7 +59,11 @@
               }
             </select>
 
-            <button type="submit" [disabled]="loading()">
+            <button
+              class="mt-[0.4rem] cursor-pointer rounded-lg border-0 bg-primary px-4 py-3 font-semibold text-white disabled:cursor-wait disabled:opacity-65"
+              type="submit"
+              [disabled]="loading()"
+            >
               {{ loading() ? 'Recording…' : 'Confirm movement' }}
             </button>
           </form>
@@ -55,21 +72,26 @@
 
       @if (message()) {
         <p
-          class="message"
+          class="message rounded-lg px-4 py-3 data-[type=error]:bg-[#fff0ef] data-[type=error]:text-[#a5120b] data-[type=success]:bg-[#edf8ef] data-[type=success]:text-[#246b37]"
           role="status"
-          [class.message--success]="messageType() === 'success'"
-          [class.message--error]="messageType() === 'error'"
+          [attr.data-type]="messageType()"
         >
           {{ message() }}
         </p>
       }
     </section>
   } @else if (part.error()) {
-    <div class="detail__status" role="alert">
+    <div class="py-8 text-center text-text-muted" role="alert">
       <p>We couldn't load this spare part.</p>
-      <button type="button" (click)="part.reload()">Try again</button>
+      <button
+        class="cursor-pointer rounded-lg border-0 bg-primary px-4 py-3 font-semibold text-white"
+        type="button"
+        (click)="part.reload()"
+      >
+        Try again
+      </button>
     </div>
   } @else {
-    <p class="detail__status">Loading…</p>
+    <p class="py-8 text-center text-text-muted">Loading…</p>
   }
 </main>

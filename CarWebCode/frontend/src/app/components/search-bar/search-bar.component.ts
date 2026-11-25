@@ -4,7 +4,6 @@ import { Component, input, output, signal } from '@angular/core';
 @Component({
   selector: 'app-search-bar',
   templateUrl: './search-bar.component.html',
-  styleUrl: './search-bar.component.css',
 })
 export class SearchBarComponent {
   readonly placeholder = input('Search by brand or model');

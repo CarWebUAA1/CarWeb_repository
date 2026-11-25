@@ -9,7 +9,6 @@ import { CarService } from '../../services/car.service';
   selector: 'app-car-catalog',
   imports: [SiteHeaderComponent, RouterLink, CarCardComponent],
   templateUrl: './car-catalog.component.html',
-  styleUrl: './car-catalog.component.css',
 })
 export class CarCatalogComponent {
   private readonly carService = inject(CarService);

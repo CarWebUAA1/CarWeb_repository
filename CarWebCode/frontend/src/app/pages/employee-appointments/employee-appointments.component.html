@@ -1,0 +1,135 @@
+<app-portal-header />
+
+<main class="ws-page">
+  <a class="ws-back" [routerLink]="homeLink()">← Home</a>
+  <h1>Appointments</h1>
+  <p class="ws-intro">Confirm or reject the appointments customers request. Whoever confirms becomes the responsible employee.</p>
+
+  @if (message(); as m) {
+    <p class="ws-message" [class]="'ws-message--' + m.type" role="status" aria-live="polite">{{ m.text }}</p>
+  }
+
+  @if (action(); as a) {
+    <section class="ws-panel" aria-labelledby="action-title">
+      <h2 id="action-title">
+        @switch (a.kind) {
+          @case ('reject') { Reject appointment #{{ a.appointment.appointmentId }} }
+          @case ('cancel') { Cancel appointment #{{ a.appointment.appointmentId }} }
+          @case ('reschedule') { Reschedule appointment #{{ a.appointment.appointmentId }} }
+        }
+      </h2>
+      <p class="ws-note">
+        {{ a.appointment.clientName }} · {{ a.appointment.appointmentType }} ·
+        {{ toDate(a.appointment.appointmentDatetime) | date: 'EEE MMM d, h:mm a' }}
+      </p>
+
+      <form class="action-form ws-form mt-4" (submit)="submitAction($event)">
+        @if (a.kind === 'reschedule') {
+          <div class="ws-field">
+            <label for="new-datetime">New date and time</label>
+            <input
+              id="new-datetime"
+              type="datetime-local"
+              required
+              [min]="minDatetime"
+              [max]="maxDatetime"
+              [value]="newDatetime()"
+              (input)="newDatetime.set($any($event.target).value)"
+            />
+            <small>Mon–Fri 9 AM–5 PM · Sat 9 AM–3 PM</small>
+          </div>
+        } @else {
+          <div class="ws-field ws-field--wide">
+            <label for="reason">Reason (the customer will see it)</label>
+            <textarea
+              id="reason"
+              rows="2"
+              maxlength="255"
+              required
+              [value]="reason()"
+              (input)="reason.set($any($event.target).value)"
+            ></textarea>
+          </div>
+        }
+        <div class="ws-actions ws-actions--form">
+          <button type="submit" class="btn" [disabled]="busyId() !== null">
+            {{ busyId() !== null ? 'Saving…' : 'Save' }}
+          </button>
+          <button type="button" class="btn btn--ghost" (click)="closeAction()">Back</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <section class="ws-panel" aria-label="Appointment list">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="ws-tabs" role="group" aria-label="Filter by status">
+        @for (f of filters; track f) {
+          <button type="button" class="btn btn--ghost btn--small" [attr.aria-pressed]="filter() === f" (click)="filter.set(f)">
+            {{ f }} ({{ counts()[f] }})
+          </button>
+        }
+      </div>
+      <label class="ws-field min-w-[240px]">
+        <span class="visually-hidden">Search</span>
+        <input type="search" placeholder="Search customer, car or #" [value]="search()" (input)="search.set($any($event.target).value)" />
+      </label>
+    </div>
+
+    @if (list.isLoading()) {
+      <p class="ws-note">Loading appointments…</p>
+    } @else if (list.error()) {
+      <p class="ws-note" role="alert">
+        We couldn't load the appointments.
+        <button type="button" class="btn btn--ghost btn--small" (click)="list.reload()">Try again</button>
+      </p>
+    } @else if (visible().length === 0) {
+      <p class="ws-note">There are no appointments here.</p>
+    } @else {
+      <div class="ws-table-wrapper">
+        <table class="ws-table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">When</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Type · Car</th>
+              <th scope="col">Status</th>
+              <th scope="col">Responsible</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of visible(); track a.appointmentId) {
+              <tr [class.is-selected]="action()?.appointment?.appointmentId === a.appointmentId">
+                <td>{{ a.appointmentId }}</td>
+                <td class="whitespace-nowrap">{{ toDate(a.appointmentDatetime) | date: 'EEE MMM d, y · h:mm a' }}</td>
+                <td>
+                  <strong>{{ a.clientName }}</strong><br />
+                  <small>{{ a.clientPhone }} · {{ a.clientEmail }}</small>
+                </td>
+                <td>{{ a.appointmentType }}<br /><small>{{ a.car ?? 'No car yet' }}</small></td>
+                <td><span [class]="pillClass(a.status)">{{ a.status }}</span></td>
+                <td>{{ a.employeeName ?? '—' }}</td>
+                <td>
+                  @if (isActive(a)) {
+                    <div class="ws-actions flex-nowrap">
+                      @if (a.status === 'Pending') {
+                        <button type="button" class="btn btn--small" [disabled]="busyId() !== null" (click)="confirm(a)">Confirm</button>
+                        <button type="button" class="btn btn--ghost btn--small" (click)="open('reject', a)">Reject</button>
+                      }
+                      <button type="button" class="btn btn--ghost btn--small" (click)="open('reschedule', a)">Reschedule</button>
+                      <button type="button" class="btn btn--ghost btn--small" (click)="open('cancel', a)">Cancel</button>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>
+
+<app-site-footer />

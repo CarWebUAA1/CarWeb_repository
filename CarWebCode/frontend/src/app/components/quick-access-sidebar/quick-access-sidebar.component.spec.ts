@@ -27,8 +27,8 @@ describe('QuickAccessSidebarComponent', () => {
     expect(panel()).not.toBeNull();
     expect(toggle().getAttribute('aria-expanded')).toBe('true');
     const links = Array.from(el.querySelectorAll('a.sidebar__link')).map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Home', 'Catalog', 'Log in', 'Sign up']);
-    expect(el.querySelectorAll('.sidebar__link--soon').length).toBe(3);
+    expect(links).toEqual(['Home', 'Catalog', 'Spare parts', 'Sell my car', 'Employee access']);
+    expect(el.querySelectorAll('.sidebar__link--soon').length).toBe(0);
   });
 
   it('closes with Escape and with the backdrop', () => {

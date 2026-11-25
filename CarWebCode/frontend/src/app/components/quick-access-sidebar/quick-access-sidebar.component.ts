@@ -20,7 +20,6 @@ interface QuickLink {
   selector: 'app-quick-access-sidebar',
   imports: [RouterLink],
   templateUrl: './quick-access-sidebar.component.html',
-  styleUrl: './quick-access-sidebar.component.css',
   host: { '(document:keydown.escape)': 'close()' },
 })
 export class QuickAccessSidebarComponent {
@@ -33,11 +32,10 @@ export class QuickAccessSidebarComponent {
   protected readonly links: QuickLink[] = [
     { label: 'Home', route: '/' },
     { label: 'Catalog', route: '/cars' },
-    { label: 'Log in', route: '/login' },
-    { label: 'Sign up', route: '/register' },
-    { label: 'My appointments' },
-    { label: 'Sell my car' },
-    { label: 'Spare parts' },
+    { label: 'Spare parts', route: '/spare-parts' },
+    { label: 'Sell my car', route: '/sell-my-car' },
+    // Customers have no account: they manage each appointment with the link they get when booking it.
+    { label: 'Employee access', route: '/login' },
   ];
 
   open() {
